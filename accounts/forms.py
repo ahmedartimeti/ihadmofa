@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, SetPasswordForm, UserCreationForm, UsernameField
@@ -33,6 +35,7 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
 
 
 class RegisterForm(UserCreationForm):
+    username = forms.CharField(required=False, widget=forms.HiddenInput)
     full_name = forms.CharField(label='الاسم الكامل')
     department = forms.CharField(label='الدائرة')
     section = forms.CharField(label='القسم', required=False)
@@ -42,12 +45,33 @@ class RegisterForm(UserCreationForm):
     birth_city = forms.CharField(label='المدينة التي ولد فيها')
     photo = forms.ImageField(label='صورة الموظف عند الحاجة', required=False)
 
+    def clean_username(self):
+        username = (self.cleaned_data.get('username') or '').strip()
+        email = (self.cleaned_data.get('email_for_alerts') or '').strip()
+        full_name = (self.cleaned_data.get('full_name') or '').strip()
+
+        if not username:
+            username = email.split('@')[0] if email else full_name
+        username = re.sub(r'[^A-Za-z0-9_.@+-]+', '_', username).strip('_.')
+        if not username:
+            username = 'employee'
+
+        candidate = username[:140]
+        suffix = 1
+        while User.objects.filter(username__iexact=candidate).exists():
+            suffix += 1
+            candidate = f'{username[:130]}_{suffix}'
+        return candidate
+
     class Meta:
         model = User
         fields = ('username', 'full_name', 'department', 'section', 'job_title', 'email_for_alerts', 'password1', 'password2', 'first_school', 'birth_city', 'photo')
 
     def save(self, commit=True):
         user = super().save(commit=commit)
+        user.email = self.cleaned_data.get('email_for_alerts', '')
+        if commit:
+            user.save(update_fields=['email'])
         profile = user.profile
         profile.full_name = self.cleaned_data['full_name']
         profile.department = self.cleaned_data['department']

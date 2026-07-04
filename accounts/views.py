@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import logout, update_session_auth_hash, views as auth_views
+from django.contrib.auth import login, logout, update_session_auth_hash, views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -38,9 +38,10 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'تم إنشاء الحساب. يمكنك تسجيل الدخول الآن.')
-            return redirect('accounts:login')
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'تم إنشاء الحساب وتسجيل الدخول بنجاح.')
+            return redirect('planner:tasks')
     else:
         form = RegisterForm()
     return render(request, 'login.html', {'form': EmailOrUsernameAuthenticationForm(), 'register_form': form, 'recovery_form': PublicPasswordRecoveryForm(), 'show_register': True})
