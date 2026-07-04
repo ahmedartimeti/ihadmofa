@@ -17,4 +17,6 @@ COPY . /app/
 
 RUN python manage.py collectstatic --noinput
 
-CMD python manage.py migrate --noinput && gunicorn mofa_smart_planner.wsgi:application --bind 0.0.0.0:${PORT:-8000} --log-file -
+RUN chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]

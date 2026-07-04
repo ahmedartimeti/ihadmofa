@@ -3,4 +3,4 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "python manage.py migrate --noinput && gunicorn mofa_smart_planner.wsgi:application --bind 0.0.0.0:${PORT:-8000} --log-file -"
+startCommand = "/app/start.sh"
