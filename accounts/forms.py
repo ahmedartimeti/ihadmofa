@@ -7,6 +7,30 @@ from django.contrib.auth.models import User
 from .models import UserProfile
 
 
+def find_user_by_login_value(value):
+    login_value = (value or '').strip()
+    if not login_value:
+        return None
+
+    user = User.objects.filter(username__iexact=login_value).first()
+    if user is not None:
+        return user
+
+    user = User.objects.filter(email__iexact=login_value).first()
+    if user is not None:
+        return user
+
+    profile = UserProfile.objects.select_related('user').filter(email_for_alerts__iexact=login_value).first()
+    if profile is not None:
+        return profile.user
+
+    profile = UserProfile.objects.select_related('user').filter(full_name__iexact=login_value).first()
+    if profile is not None:
+        return profile.user
+
+    return None
+
+
 class EmailOrUsernameAuthenticationForm(AuthenticationForm):
     username = UsernameField(label='اسم المستخدم أو الإيميل')
 
@@ -16,15 +40,8 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
 
         if username is not None and password:
             login_value = username.strip()
-            auth_username = login_value
-
-            if '@' in login_value:
-                user = User.objects.filter(email__iexact=login_value).first()
-                if user is None:
-                    profile = UserProfile.objects.select_related('user').filter(email_for_alerts__iexact=login_value).first()
-                    user = profile.user if profile else None
-                if user is not None:
-                    auth_username = user.get_username()
+            user = find_user_by_login_value(login_value)
+            auth_username = user.get_username() if user is not None else login_value
 
             self.user_cache = authenticate(self.request, username=auth_username, password=password)
             if self.user_cache is None:
@@ -152,14 +169,7 @@ class PublicPasswordRecoveryForm(forms.Form):
         if password1 and password2 and password1 != password2:
             self.add_error('new_password2', 'الرمزان غير متطابقين.')
 
-        user = None
-        if identifier:
-            user = User.objects.filter(username__iexact=identifier).first()
-            if user is None and '@' in identifier:
-                user = User.objects.filter(email__iexact=identifier).first()
-            if user is None and '@' in identifier:
-                profile = UserProfile.objects.select_related('user').filter(email_for_alerts__iexact=identifier).first()
-                user = profile.user if profile else None
+        user = find_user_by_login_value(identifier) if identifier else None
 
         if user is None:
             self.add_error('identifier', 'لم يتم العثور على الحساب.')
