@@ -15,8 +15,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'unsafe-dev-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 _default_hosts = 'ihadmofa.onrender.com,ihadmofa.up.railway.app,web-production-9453d.up.railway.app,127.0.0.1,localhost'
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',') if host.strip()]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://ihadmofa.onrender.com,https://ihadmofa.up.railway.app,https://web-production-9453d.up.railway.app').split(',') if origin.strip()]
+_default_csrf_origins = 'https://ihadmofa.onrender.com,https://ihadmofa.up.railway.app,https://web-production-9453d.up.railway.app'
+
+
+def _split_env_list(value):
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+ALLOWED_HOSTS = sorted(set(_split_env_list(_default_hosts) + _split_env_list(os.environ.get('ALLOWED_HOSTS', ''))))
+CSRF_TRUSTED_ORIGINS = sorted(set(_split_env_list(_default_csrf_origins) + _split_env_list(os.environ.get('CSRF_TRUSTED_ORIGINS', ''))))
 
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
@@ -87,8 +94,10 @@ LOGIN_REDIRECT_URL = 'planner:tasks'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
-CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True' if not DEBUG else 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True' if not DEBUG else 'False') == 'True'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
