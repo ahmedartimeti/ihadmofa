@@ -8,6 +8,11 @@ except ImportError:
     def load_dotenv(*args, **kwargs):
         return None
 
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
@@ -61,8 +66,18 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'mofa_smart_planner.wsgi.application'
 
+database_url = os.environ.get('DATABASE_URL')
 sqlite_path = os.environ.get('SQLITE_PATH')
-DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': sqlite_path or BASE_DIR / 'db.sqlite3'}}
+if database_url and dj_database_url:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            ssl_require=database_url.startswith('postgres') and not DEBUG,
+        )
+    }
+else:
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': sqlite_path or BASE_DIR / 'db.sqlite3'}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
