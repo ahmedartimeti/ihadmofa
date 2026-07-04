@@ -55,9 +55,13 @@ Note: This Codex environment blocked direct command execution, so command verifi
 - [x] STATIC_ROOT is configured.
 - [x] STATICFILES_DIRS points to static.
 - [x] MEDIA_ROOT is configurable through Environment Variable.
-- [x] Media files are served in local mode and configured for Render disk.
+- [x] Media files use local media configuration and do not block Render Free deployment.
 
 ## Render Instructions Check
+
+- [x] render.yaml is Render Free compatible and does not include plan: starter or disk settings.
+
+
 
 - [x] Build Command documented:
 
@@ -74,12 +78,12 @@ gunicorn mofa_smart_planner.wsgi:application --log-file -
 - [x] Environment Variables documented.
 - [x] Migrate command documented.
 - [x] Superuser command documented.
-- [x] Persistent disk warning documented for SQLite.
+- [x] Render Free SQLite warning documented.
 
 ## Warnings
 
 - SQLite remains enabled as requested. It is acceptable for pilot/testing only.
-- On Render, SQLite must use a persistent disk mounted at /var/data. Without a persistent disk, database data can be lost after redeploys or service rebuilds.
+- On Render Free, SQLite uses temporary filesystem storage. Database data can be lost after redeploys, rebuilds, or restarts.
 - For official long-term production, migrate later to PostgreSQL.
 - Device push notifications require HTTPS and VAPID keys. They are prepared but not required for the first deployment.
 - No email, Flutter, Firebase, AI, or new report features were added in this final deployment check.
@@ -97,4 +101,4 @@ gunicorn mofa_smart_planner.wsgi:application --log-file -
 
 Status: READY FOR RENDER PILOT DEPLOYMENT.
 
-Condition: Use persistent disk for SQLite, or accept that SQLite without disk is only temporary/testing data.
+Condition: Render Free deployment is ready for pilot/testing. For permanent data, upgrade later to persistent disk or PostgreSQL.

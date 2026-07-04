@@ -45,8 +45,6 @@ SECRET_KEY=change-this-secret-key
 DEBUG=False
 ALLOWED_HOSTS=ihadmofa.onrender.com,127.0.0.1,localhost
 CSRF_TRUSTED_ORIGINS=https://ihadmofa.onrender.com
-SQLITE_PATH=/var/data/db.sqlite3
-MEDIA_ROOT=/var/data/media
 SESSION_COOKIE_SECURE=True
 CSRF_COOKIE_SECURE=True
 ~~~
@@ -69,8 +67,7 @@ Static files are served using WhiteNoise.
 
 ## Media Files
 
-Media files are configured through MEDIA_ROOT=/var/data/media.
-On Render this is stored on the persistent disk defined in render.yaml.
+Media files use the default local media folder. On Render Free, uploaded media and SQLite data are temporary and may be lost after redeploys or restarts.
 
 ## Deploying to GitHub
 
@@ -118,8 +115,6 @@ SECRET_KEY=(generate a secure value)
 DEBUG=False
 ALLOWED_HOSTS=ihadmofa.onrender.com
 CSRF_TRUSTED_ORIGINS=https://ihadmofa.onrender.com
-SQLITE_PATH=/var/data/db.sqlite3
-MEDIA_ROOT=/var/data/media
 SESSION_COOKIE_SECURE=True
 CSRF_COOKIE_SECURE=True
 ~~~
@@ -132,17 +127,17 @@ WEBPUSH_VAPID_PRIVATE_KEY=
 WEBPUSH_VAPID_ADMIN_EMAIL=
 ~~~
 
-## Persistent SQLite on Render
+## SQLite on Render Free
 
-This phase keeps SQLite as requested. SQLite is suitable for pilot/testing only. For official long-term production, PostgreSQL is recommended later. The project includes a persistent disk in render.yaml:
+This phase keeps SQLite as requested. The included render.yaml is compatible with Render Free and does not define a persistent disk. This is useful for first deployment testing only.
 
-~~~text
-mountPath: /var/data
-SQLITE_PATH=/var/data/db.sqlite3
-MEDIA_ROOT=/var/data/media
-~~~
+Warning: SQLite data and uploaded media on Render Free are not permanent. Data can be lost after redeploys, rebuilds, or restarts.
 
-Do not remove the disk if you want database and uploaded media persistence. Render persistent disks may require a paid plan; without a disk, SQLite data can be lost after redeploys.
+Later upgrade paths without major project changes:
+
+- Upgrade to a Render plan that supports a persistent disk, then set SQLITE_PATH and MEDIA_ROOT to the disk mount path.
+- Move to PostgreSQL for official long-term production.
+
 
 ## Running Migrations on Render
 
