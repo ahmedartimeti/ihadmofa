@@ -36,7 +36,7 @@ class LoginView(auth_views.LoginView):
 
 def register(request):
     if request.method == 'POST':
-        form = RegisterForm(request.POST)
+        form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'تم إنشاء الحساب. يمكنك تسجيل الدخول الآن.')

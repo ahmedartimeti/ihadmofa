@@ -2293,3 +2293,113 @@ body{background:linear-gradient(180deg,#edf3f7,#f9fbfd 46%,#eef2f7);font-family:
   line-height: 1.7;
   margin: 0 0 10px;
 }
+
+
+/* Refined login/register screen */
+.ihad-login-card-refined .ihad-login-panel-refined{
+  padding: 18px 18px 28px !important;
+  direction: rtl !important;
+}
+.ihad-top-tabs{
+  display: grid !important;
+  grid-template-columns: 120px 1fr !important;
+  border: 1px solid #d7e0ef !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+  margin: 6px 0 28px !important;
+  min-height: 72px !important;
+}
+.ihad-top-tab{
+  border: 0 !important;
+  background: #fff !important;
+  color: #1b356b !important;
+  font-size: 15px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+}
+.ihad-top-tab.active{
+  background: #20385d !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+.ihad-login-panel-refined .auth-panel{
+  display: none !important;
+}
+.ihad-login-panel-refined .auth-panel.active-panel{
+  display: grid !important;
+}
+.ihad-login-panel-refined .ihad-login-form{
+  gap: 16px !important;
+}
+.ihad-login-panel-refined label{
+  color: #12285a !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+.ihad-login-panel-refined input,
+.ihad-login-panel-refined select,
+.ihad-login-panel-refined textarea{
+  width: 100% !important;
+  min-height: 48px !important;
+  border: 1px solid #d7e0ef !important;
+  border-radius: 8px !important;
+  padding: 10px 13px !important;
+  background: #fff !important;
+  color: #172f63 !important;
+  font-size: 15px !important;
+  box-sizing: border-box !important;
+}
+.ihad-signin-button{
+  background: #148372 !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  min-height: 50px !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+.ihad-forgot-button{
+  border: 1px solid #d7e0ef !important;
+  background: #fff !important;
+  color: #172f63 !important;
+  border-radius: 8px !important;
+  min-height: 50px !important;
+  font-size: 15px !important;
+  cursor: pointer !important;
+}
+.ihad-register-grid{
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px 12px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-inline-end: 0 !important;
+}
+.ihad-register-grid .full-span,
+.ihad-login-panel-refined .full-span{
+  grid-column: 1 / -1 !important;
+}
+.ihad-register-grid .hidden-field{
+  display: none !important;
+}
+.ihad-register-grid ul.errorlist,
+.ihad-login-panel-refined ul.errorlist{
+  list-style: none !important;
+  margin: 6px 0 0 !important;
+  padding: 0 !important;
+  color: #b42318 !important;
+  font-size: 12px !important;
+}
+.ihad-login-error{
+  background: #fff1f2 !important;
+  border: 1px solid #fecdd3 !important;
+  color: #b42318 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+}
+@media(max-width:760px){
+  .ihad-register-grid{grid-template-columns:1fr !important;}
+  .ihad-top-tabs{grid-template-columns:1fr 1fr !important;min-height:58px !important;}
+}

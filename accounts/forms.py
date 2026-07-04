@@ -40,10 +40,11 @@ class RegisterForm(UserCreationForm):
     email_for_alerts = forms.EmailField(label='إيميل التنبيهات', required=False)
     first_school = forms.CharField(label='اسم أول مدرسة ابتدائية')
     birth_city = forms.CharField(label='المدينة التي ولد فيها')
+    photo = forms.ImageField(label='صورة الموظف عند الحاجة', required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'full_name', 'department', 'section', 'job_title', 'email_for_alerts', 'password1', 'password2', 'first_school', 'birth_city')
+        fields = ('username', 'full_name', 'department', 'section', 'job_title', 'email_for_alerts', 'password1', 'password2', 'first_school', 'birth_city', 'photo')
 
     def save(self, commit=True):
         user = super().save(commit=commit)
@@ -55,6 +56,8 @@ class RegisterForm(UserCreationForm):
         profile.email_for_alerts = self.cleaned_data.get('email_for_alerts', '')
         profile.first_school = self.cleaned_data.get('first_school', '')
         profile.birth_city = self.cleaned_data.get('birth_city', '')
+        if self.cleaned_data.get('photo'):
+            profile.photo = self.cleaned_data['photo']
         if commit:
             profile.save()
         return user

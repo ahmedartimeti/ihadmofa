@@ -3,7 +3,7 @@
 {% block title %}IHAD - تسجيل الدخول / Sign In{% endblock %}
 {% block auth_content %}
 <div class="ihad-login-page">
-  <section class="ihad-login-card">
+  <section class="ihad-login-card ihad-login-card-refined">
     <div class="ihad-login-brand">
       <img src="{% static 'img/logo.jpg' %}" alt="وزارة الخارجية العراقية / Ministry of Foreign Affairs" class="ihad-login-logo">
       <p class="ihad-country">جمهورية العراق<br><span>Republic of Iraq</span></p>
@@ -13,45 +13,113 @@
       <p class="ihad-subtitle">المنصة الذكية لإدارة سير العمل الدبلوماسي<br><span>Smart Workflow Management Platform</span></p>
     </div>
 
-    <div class="ihad-login-panel">
-      <div class="ihad-login-heading">
-        <span>دخول آمن / Secure Access</span>
-        <h3 id="authPanelTitle">تسجيل الدخول / Sign In</h3>
-      </div>
-
-      <div class="ihad-auth-tabs">
-        <button class="ihad-auth-tab active" type="button" data-auth-tab="login">دخول</button>
-        <button class="ihad-auth-tab" type="button" data-auth-tab="register">إنشاء حساب</button>
-        <button class="ihad-auth-tab" type="button" data-auth-tab="recovery">نسيت الرمز؟</button>
+    <div class="ihad-login-panel ihad-login-panel-refined">
+      <div class="ihad-top-tabs">
+        <button class="ihad-top-tab active" type="button" data-auth-tab="login">دخول</button>
+        <button class="ihad-top-tab" type="button" data-auth-tab="register">إنشاء حساب</button>
       </div>
 
       <form method="post" action="{% url 'accounts:login' %}" class="ihad-login-form auth-panel" id="loginFormCard">
         {% csrf_token %}
         <div class="ihad-field">
-          <label for="{{ form.username.id_for_label }}">اسم المستخدم أو الإيميل / Username or Email</label>
+          <label for="{{ form.username.id_for_label }}">الاسم</label>
           {{ form.username }}
         </div>
         <div class="ihad-field">
-          <label for="{{ form.password.id_for_label }}">كلمة المرور / Password</label>
+          <label for="{{ form.password.id_for_label }}">كلمة المرور</label>
           {{ form.password }}
         </div>
-        {% if form.errors %}<div class="ihad-login-error">تحقق من اسم المستخدم أو الإيميل وكلمة المرور / Please check your credentials.</div>{% endif %}
-        <button class="ihad-signin-button" type="submit">تسجيل الدخول / Sign In</button>
+        {% if form.errors %}<div class="ihad-login-error">تحقق من اسم المستخدم أو الإيميل وكلمة المرور.</div>{% endif %}
+        <button class="ihad-signin-button" type="submit">دخول</button>
+        <button class="ihad-forgot-button" type="button" data-auth-tab="recovery">نسيت كلمة المرور</button>
       </form>
 
-      <form method="post" action="{% url 'accounts:register' %}" class="ihad-register-form auth-panel" id="registerFormCard">
+      <form method="post" action="{% url 'accounts:register' %}" enctype="multipart/form-data" class="ihad-register-form auth-panel ihad-register-grid" id="registerFormCard">
         {% csrf_token %}
-        <h3>إنشاء حساب موظف / Create Employee Account</h3>
-        {{ register_form.as_p }}
-        <button class="gold full" type="submit">إنشاء الحساب / Create Account</button>
+        <div class="ihad-field">
+          <label for="{{ register_form.full_name.id_for_label }}">الاسم</label>
+          {{ register_form.full_name }}
+          {{ register_form.full_name.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ register_form.department.id_for_label }}">الدائرة والقسم</label>
+          {{ register_form.department }}
+          {{ register_form.department.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ register_form.job_title.id_for_label }}">العنوان الوظيفي</label>
+          {{ register_form.job_title }}
+          {{ register_form.job_title.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ register_form.email_for_alerts.id_for_label }}">البريد الإلكتروني للتنبيهات</label>
+          {{ register_form.email_for_alerts }}
+          {{ register_form.email_for_alerts.errors }}
+        </div>
+        <div class="ihad-field full-span">
+          <label for="{{ register_form.first_school.id_for_label }}">اسم أول مدرسة ابتدائية لك</label>
+          {{ register_form.first_school }}
+          {{ register_form.first_school.errors }}
+        </div>
+        <div class="ihad-field full-span">
+          <label for="{{ register_form.birth_city.id_for_label }}">المدينة التي ولدت فيها</label>
+          {{ register_form.birth_city }}
+          {{ register_form.birth_city.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ register_form.password1.id_for_label }}">كلمة المرور</label>
+          {{ register_form.password1 }}
+          {{ register_form.password1.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ register_form.password2.id_for_label }}">تأكيد كلمة المرور</label>
+          {{ register_form.password2 }}
+          {{ register_form.password2.errors }}
+        </div>
+        <div class="ihad-field full-span">
+          <label for="{{ register_form.photo.id_for_label }}">صورة الموظف عند الحاجة</label>
+          {{ register_form.photo }}
+          {{ register_form.photo.errors }}
+        </div>
+        <div class="hidden-field">
+          {{ register_form.username }}
+          {{ register_form.section }}
+          {{ register_form.username.errors }}
+          {{ register_form.section.errors }}
+          {{ register_form.non_field_errors }}
+        </div>
+        <button class="ihad-signin-button full-span" type="submit">حفظ الحساب والدخول</button>
       </form>
 
-      <form method="post" action="{% url 'accounts:recover' %}" class="ihad-register-form auth-panel" id="recoveryFormCard">
+      <form method="post" action="{% url 'accounts:recover' %}" class="ihad-register-form auth-panel ihad-register-grid" id="recoveryFormCard">
         {% csrf_token %}
-        <h3>استرجاع الرمز السري / Password Recovery</h3>
-        <p class="ihad-form-note">اكتب اسم المستخدم أو الإيميل، ثم أجب عن أسئلة التحقق لتعيين رمز جديد.</p>
-        {{ recovery_form.as_p }}
-        <button class="ihad-signin-button" type="submit">تغيير الرمز / Reset Password</button>
+        <div class="ihad-field full-span">
+          <label for="{{ recovery_form.identifier.id_for_label }}">اسم المستخدم أو الإيميل</label>
+          {{ recovery_form.identifier }}
+          {{ recovery_form.identifier.errors }}
+        </div>
+        <div class="ihad-field full-span">
+          <label for="{{ recovery_form.first_school.id_for_label }}">اسم أول مدرسة ابتدائية</label>
+          {{ recovery_form.first_school }}
+          {{ recovery_form.first_school.errors }}
+        </div>
+        <div class="ihad-field full-span">
+          <label for="{{ recovery_form.birth_city.id_for_label }}">المدينة التي ولدت فيها</label>
+          {{ recovery_form.birth_city }}
+          {{ recovery_form.birth_city.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ recovery_form.new_password1.id_for_label }}">الرمز الجديد</label>
+          {{ recovery_form.new_password1 }}
+          {{ recovery_form.new_password1.errors }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ recovery_form.new_password2.id_for_label }}">تأكيد الرمز</label>
+          {{ recovery_form.new_password2 }}
+          {{ recovery_form.new_password2.errors }}
+        </div>
+        <button class="ihad-signin-button full-span" type="submit">تغيير الرمز</button>
+        <button class="ihad-forgot-button full-span" type="button" data-auth-tab="login">العودة إلى الدخول</button>
       </form>
     </div>
   </section>
@@ -63,22 +131,35 @@
 </div>
 <script>
 (function(){
-  var titles = {
-    login: 'تسجيل الدخول / Sign In',
-    register: 'إنشاء حساب / Create Account',
-    recovery: 'استرجاع الرمز / Password Recovery'
-  };
+  function syncUsername(){
+    var nameInput = document.getElementById('{{ register_form.full_name.id_for_label }}');
+    var emailInput = document.getElementById('{{ register_form.email_for_alerts.id_for_label }}');
+    var usernameInput = document.getElementById('{{ register_form.username.id_for_label }}');
+    var sectionInput = document.getElementById('{{ register_form.section.id_for_label }}');
+    var deptInput = document.getElementById('{{ register_form.department.id_for_label }}');
+    if (usernameInput && !usernameInput.value) {
+      var email = emailInput && emailInput.value ? emailInput.value.split('@')[0] : '';
+      var base = email || (nameInput && nameInput.value ? nameInput.value.trim().replace(/\s+/g, '_') : 'employee');
+      usernameInput.value = base;
+    }
+    if (sectionInput && !sectionInput.value && deptInput) sectionInput.value = deptInput.value;
+  }
   function showPanel(name){
-    document.querySelectorAll('.auth-panel').forEach(function(panel){ panel.style.display = 'none'; });
-    document.querySelectorAll('.ihad-auth-tab').forEach(function(tab){ tab.classList.remove('active'); });
+    document.querySelectorAll('.auth-panel').forEach(function(panel){ panel.classList.remove('active-panel'); });
+    document.querySelectorAll('.ihad-top-tab').forEach(function(tab){ tab.classList.remove('active'); });
     var panel = document.getElementById(name + 'FormCard');
-    var tab = document.querySelector('[data-auth-tab="' + name + '"]');
-    if (panel) panel.style.display = 'grid';
+    var tab = document.querySelector('.ihad-top-tab[data-auth-tab="' + name + '"]');
+    if (panel) panel.classList.add('active-panel');
     if (tab) tab.classList.add('active');
-    document.getElementById('authPanelTitle').textContent = titles[name] || titles.login;
   }
   document.querySelectorAll('[data-auth-tab]').forEach(function(btn){
     btn.addEventListener('click', function(){ showPanel(btn.dataset.authTab); });
+  });
+  var registerForm = document.getElementById('registerFormCard');
+  if (registerForm) registerForm.addEventListener('submit', syncUsername);
+  ['{{ register_form.full_name.id_for_label }}','{{ register_form.email_for_alerts.id_for_label }}','{{ register_form.department.id_for_label }}'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', syncUsername);
   });
   showPanel('{% if show_register %}register{% elif show_recovery %}recovery{% else %}login{% endif %}');
 })();
