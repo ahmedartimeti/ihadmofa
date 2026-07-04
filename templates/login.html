@@ -16,28 +16,42 @@
     <div class="ihad-login-panel">
       <div class="ihad-login-heading">
         <span>دخول آمن / Secure Access</span>
-        <h3>تسجيل الدخول / Sign In</h3>
+        <h3 id="authPanelTitle">تسجيل الدخول / Sign In</h3>
       </div>
-      <form method="post" action="{% url 'accounts:login' %}" class="ihad-login-form" id="loginFormCard">
+
+      <div class="ihad-auth-tabs">
+        <button class="ihad-auth-tab active" type="button" data-auth-tab="login">دخول</button>
+        <button class="ihad-auth-tab" type="button" data-auth-tab="register">إنشاء حساب</button>
+        <button class="ihad-auth-tab" type="button" data-auth-tab="recovery">نسيت الرمز؟</button>
+      </div>
+
+      <form method="post" action="{% url 'accounts:login' %}" class="ihad-login-form auth-panel" id="loginFormCard">
         {% csrf_token %}
         <div class="ihad-field">
-          <label for="{{ form.username.id_for_label }}">اسم المستخدم / Username</label>
+          <label for="{{ form.username.id_for_label }}">اسم المستخدم أو الإيميل / Username or Email</label>
           {{ form.username }}
         </div>
         <div class="ihad-field">
           <label for="{{ form.password.id_for_label }}">كلمة المرور / Password</label>
           {{ form.password }}
         </div>
-        {% if form.errors %}<div class="ihad-login-error">تحقق من اسم المستخدم وكلمة المرور / Please check your username and password.</div>{% endif %}
+        {% if form.errors %}<div class="ihad-login-error">تحقق من اسم المستخدم أو الإيميل وكلمة المرور / Please check your credentials.</div>{% endif %}
         <button class="ihad-signin-button" type="submit">تسجيل الدخول / Sign In</button>
       </form>
-      <button class="ihad-register-toggle" type="button" data-auth-tab="register">إنشاء حساب موظف / Create employee account</button>
-      <form method="post" action="{% url 'accounts:register' %}" class="ihad-register-form" id="registerFormCard">
+
+      <form method="post" action="{% url 'accounts:register' %}" class="ihad-register-form auth-panel" id="registerFormCard">
         {% csrf_token %}
-        <h3>إنشاء حساب / Create Account</h3>
+        <h3>إنشاء حساب موظف / Create Employee Account</h3>
         {{ register_form.as_p }}
-        <button class="gold full">إنشاء الحساب / Create Account</button>
-        <button class="btn full" type="button" data-auth-tab="login">العودة إلى تسجيل الدخول / Back to Sign In</button>
+        <button class="gold full" type="submit">إنشاء الحساب / Create Account</button>
+      </form>
+
+      <form method="post" action="{% url 'accounts:recover' %}" class="ihad-register-form auth-panel" id="recoveryFormCard">
+        {% csrf_token %}
+        <h3>استرجاع الرمز السري / Password Recovery</h3>
+        <p class="ihad-form-note">اكتب اسم المستخدم أو الإيميل، ثم أجب عن أسئلة التحقق لتعيين رمز جديد.</p>
+        {{ recovery_form.as_p }}
+        <button class="ihad-signin-button" type="submit">تغيير الرمز / Reset Password</button>
       </form>
     </div>
   </section>
@@ -48,13 +62,25 @@
   </footer>
 </div>
 <script>
-document.querySelectorAll('[data-auth-tab]').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    var register = btn.dataset.authTab === 'register';
-    document.getElementById('loginFormCard').style.display = register ? 'none' : 'grid';
-    document.getElementById('registerFormCard').style.display = register ? 'grid' : 'none';
-    document.querySelector('.ihad-register-toggle').style.display = register ? 'none' : 'block';
+(function(){
+  var titles = {
+    login: 'تسجيل الدخول / Sign In',
+    register: 'إنشاء حساب / Create Account',
+    recovery: 'استرجاع الرمز / Password Recovery'
+  };
+  function showPanel(name){
+    document.querySelectorAll('.auth-panel').forEach(function(panel){ panel.style.display = 'none'; });
+    document.querySelectorAll('.ihad-auth-tab').forEach(function(tab){ tab.classList.remove('active'); });
+    var panel = document.getElementById(name + 'FormCard');
+    var tab = document.querySelector('[data-auth-tab="' + name + '"]');
+    if (panel) panel.style.display = 'grid';
+    if (tab) tab.classList.add('active');
+    document.getElementById('authPanelTitle').textContent = titles[name] || titles.login;
+  }
+  document.querySelectorAll('[data-auth-tab]').forEach(function(btn){
+    btn.addEventListener('click', function(){ showPanel(btn.dataset.authTab); });
   });
-});
+  showPanel('{% if show_register %}register{% elif show_recovery %}recovery{% else %}login{% endif %}');
+})();
 </script>
 {% endblock %}

@@ -3,7 +3,6 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import logout, update_session_auth_hash, views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Count
@@ -13,7 +12,9 @@ from .forms import (
     DataClearForm,
     ProfileForm,
     ProfilePasswordChangeForm,
+    PublicPasswordRecoveryForm,
     RecoveryPasswordChangeForm,
+    EmailOrUsernameAuthenticationForm,
     RegisterForm,
     SecureActionForm,
     SettingsRecoveryForm,
@@ -24,10 +25,12 @@ from .models import UserProfile
 
 class LoginView(auth_views.LoginView):
     template_name = 'login.html'
+    authentication_form = EmailOrUsernameAuthenticationForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.setdefault('register_form', RegisterForm())
+        context.setdefault('recovery_form', PublicPasswordRecoveryForm())
         return context
 
 
@@ -40,8 +43,25 @@ def register(request):
             return redirect('accounts:login')
     else:
         form = RegisterForm()
-    return render(request, 'login.html', {'form': AuthenticationForm(), 'register_form': form, 'show_register': True})
+    return render(request, 'login.html', {'form': EmailOrUsernameAuthenticationForm(), 'register_form': form, 'recovery_form': PublicPasswordRecoveryForm(), 'show_register': True})
 
+
+def recover_password(request):
+    if request.method != 'POST':
+        return redirect('accounts:login')
+
+    form = PublicPasswordRecoveryForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'تم تغيير الرمز السري. يمكنك تسجيل الدخول الآن.')
+        return redirect('accounts:login')
+
+    return render(request, 'login.html', {
+        'form': EmailOrUsernameAuthenticationForm(),
+        'register_form': RegisterForm(),
+        'recovery_form': form,
+        'show_recovery': True,
+    })
 
 def account_logout(request):
     logout(request)

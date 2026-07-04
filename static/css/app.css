@@ -2263,3 +2263,33 @@ body{background:linear-gradient(180deg,#edf3f7,#f9fbfd 46%,#eef2f7);font-family:
   .ihad-login-brand h1{font-size:58px!important}
   .ihad-login-panel{padding:32px 22px!important}
 }
+
+.ihad-auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+.ihad-auth-tab {
+  border: 1px solid #d7e0ef;
+  background: #fff;
+  color: #1b356b;
+  border-radius: 8px;
+  padding: 10px 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.ihad-auth-tab.active {
+  background: #1b356b;
+  border-color: #1b356b;
+  color: #fff;
+}
+.auth-panel {
+  display: none;
+}
+.ihad-form-note {
+  color: #5b6b86;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
