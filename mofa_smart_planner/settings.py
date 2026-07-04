@@ -14,9 +14,9 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'unsafe-dev-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-_default_hosts = 'ihadmofa.onrender.com,127.0.0.1,localhost'
+_default_hosts = 'ihadmofa.onrender.com,web-production-9453d.up.railway.app,127.0.0.1,localhost'
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', _default_hosts).split(',') if host.strip()]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://ihadmofa.onrender.com').split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://ihadmofa.onrender.com,https://web-production-9453d.up.railway.app').split(',') if origin.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
