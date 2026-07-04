@@ -73,7 +73,7 @@ if database_url and dj_database_url:
         'default': dj_database_url.parse(
             database_url,
             conn_max_age=600,
-            ssl_require=database_url.startswith('postgres') and not DEBUG,
+            ssl_require=os.environ.get('DATABASE_SSL_REQUIRE', 'False') == 'True',
         )
     }
 else:
