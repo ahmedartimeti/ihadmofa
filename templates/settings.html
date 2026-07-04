@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="settings-screen">
+  <div class="top page-title-row settings-title">
+    <div>
+      <h1>الإعدادات</h1>
+      <p>اختر القسم المطلوب من الأشرطة، وستظهر تفاصيله فقط.</p>
+    </div>
+  </div>
+
+  <section class="panel settings-strips-shell">
+    <div class="settings-strip-nav" role="tablist" aria-label="أقسام الإعدادات">
+      <button type="button" class="settings-strip-button is-active profile-strip" data-settings-tab="profile" role="tab" aria-selected="true">تعديل البروفايل</button>
+      {% if is_admin %}
+      <button type="button" class="settings-strip-button admin-strip" data-settings-tab="admin" role="tab" aria-selected="false">إدارة المستخدمين</button>
+      {% endif %}
+      <button type="button" class="settings-strip-button clear-strip" data-settings-tab="clear" role="tab" aria-selected="false">مسح البيانات</button>
+      <button type="button" class="settings-strip-button password-strip" data-settings-tab="password" role="tab" aria-selected="false">تعديل الرمز السري</button>
+      <button type="button" class="settings-strip-button delete-strip" data-settings-tab="delete" role="tab" aria-selected="false">حذف الحساب</button>
+    </div>
+
+    <div class="settings-strip-content">
+      <section class="settings-strip-panel is-active" data-settings-panel="profile" role="tabpanel">
+        <div class="strip-panel-title profile-title"><h3>تعديل البروفايل</h3><span>تحديث بياناتك الشخصية والوظيفية</span></div>
+        <form method="post" enctype="multipart/form-data" class="form-box settings-compact-form profile-clean-form" data-confirm-title="تأكيد حفظ البروفايل" data-confirm-body="هل تريد حفظ تعديلات البروفايل؟">
+          {% csrf_token %}<input type="hidden" name="action" value="profile">
+          <p><label for="{{ profile_form.full_name.id_for_label }}">الاسم</label>{{ profile_form.full_name }}</p>
+          <p><label for="{{ profile_form.department.id_for_label }}">الدائرة</label>{{ profile_form.department }}</p>
+          <p><label for="{{ profile_form.section.id_for_label }}">القسم</label>{{ profile_form.section }}</p>
+          <p><label for="{{ profile_form.job_title.id_for_label }}">العنوان الوظيفي</label>{{ profile_form.job_title }}</p>
+          <p class="full-span"><label for="{{ profile_form.email_for_alerts.id_for_label }}">الإيميل</label>{{ profile_form.email_for_alerts }}</p>
+          <div class="profile-photo-field full-span">
+            <label for="{{ profile_form.photo.id_for_label }}">الصورة الشخصية</label>
+            {% if profile_form.instance.photo %}
+              <div class="current-photo-line">الصورة الحالية موجودة ويمكن استبدالها باختيار صورة جديدة.</div>
+            {% endif %}
+            {{ profile_form.photo }}
+          </div>
+          <button class="primary full-span">حفظ البروفايل</button>
+        </form>
+      </section>
+
+      {% if is_admin %}
+      <section class="settings-strip-panel" data-settings-panel="admin" role="tabpanel">
+        <div class="strip-panel-title admin-title"><h3>إدارة المستخدمين</h3><span>تظهر هذه الصلاحيات للمدير فقط</span></div>
+        <div class="admin-table-wrap strip-admin-table">
+          <table class="table admin-table">
+            <thead>
+              <tr>
+                <th>اسم المستخدم</th>
+                <th>الاسم</th>
+                <th>العنوان الوظيفي</th>
+                <th>الدائرة / القسم</th>
+                <th>عدد المهام</th>
+                <th>الحالة</th>
+                <th>الصلاحية</th>
+                <th>إجراءات المدير</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in admin_users %}
+              <tr>
+                <td>{{ row.user.username }}</td>
+                <td>{{ row.profile.full_name|default:row.user.get_full_name }}</td>
+                <td>{{ row.profile.job_title|default:"-" }}</td>
+                <td>{{ row.profile.department|default:"-" }} / {{ row.profile.section|default:"-" }}</td>
+                <td><strong>{{ row.task_count }}</strong></td>
+                <td>{% if row.user.is_active %}<span class="status-pill active">فعال</span>{% else %}<span class="status-pill blocked">محظور</span>{% endif %}</td>
+                <td>
+                  <form method="post" class="admin-inline-form" data-confirm-title="تأكيد تغيير الصلاحية" data-confirm-body="هل تريد تغيير صلاحية هذا المستخدم؟">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="admin_role_user">
+                    <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                    <select name="role">
+                      {% for value, label in role_choices %}
+                      <option value="{{ value }}" {% if row.profile.role == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn small primary">حفظ</button>
+                  </form>
+                </td>
+                <td>
+                  <div class="admin-actions">
+                    <form method="post" class="admin-inline-form" data-confirm-title="تأكيد مسح بيانات المستخدم" data-confirm-body="هل تريد مسح بيانات هذا المستخدم حسب النطاق المحدد؟">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="admin_clear_user">
+                      <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                      <select name="scope">
+                        {% for value, label in clear_scopes %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                      <button class="btn small gold">مسح</button>
+                    </form>
+                    {% if row.user != request.user %}
+                      {% if row.user.is_active %}
+                      <form method="post" data-confirm-title="تأكيد حظر المستخدم" data-confirm-body="هل تريد حظر هذا المستخدم من الدخول؟">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="admin_block_user">
+                        <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                        <button class="btn small">حظر</button>
+                      </form>
+                      {% else %}
+                      <form method="post" data-confirm-title="تأكيد رفع الحظر" data-confirm-body="هل تريد رفع الحظر عن هذا المستخدم؟">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="admin_unblock_user">
+                        <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                        <button class="btn small green">تفعيل</button>
+                      </form>
+                      {% endif %}
+                      <form method="post" data-confirm-title="تأكيد حذف المستخدم" data-confirm-body="هل تريد حذف المستخدم وجميع بياناته؟ لا يمكن التراجع عن هذا الإجراء.">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="admin_delete_user">
+                        <input type="hidden" name="user_id" value="{{ row.user.id }}">
+                        <button class="btn small danger">حذف</button>
+                      </form>
+                    {% else %}
+                      <span class="admin-self-note">حسابك الحالي</span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="8">لا توجد حسابات مستخدمين.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="settings-strip-panel" data-settings-panel="clear" role="tabpanel">
+        <div class="strip-panel-title clear-title"><h3>مسح البيانات</h3><span>اختر النطاق ثم أدخل كلمة المرور للتأكيد</span></div>
+        <form method="post" class="form-box settings-compact-form settings-two-field-form" data-confirm-title="تأكيد مسح البيانات" data-confirm-body="تم إدخال الرمز السري ونطاق المسح. هل تريد تنفيذ مسح البيانات؟ لا يمكن التراجع عن هذا الإجراء.">
+          {% csrf_token %}<input type="hidden" name="action" value="clear">
+          <p><label for="{{ clear_form.scope.id_for_label }}">نطاق المسح</label>{{ clear_form.scope }}</p>
+          <p><label for="{{ clear_form.password.id_for_label }}">كلمة المرور</label>{{ clear_form.password }}</p>
+          <button class="gold">تنفيذ المسح</button>
+        </form>
+      </section>
+
+      <section class="settings-strip-panel" data-settings-panel="password" role="tabpanel">
+        <div class="strip-panel-title password-title"><h3>تعديل الرمز السري</h3><span>أدخل الرمز الحالي ثم الرمز الجديد</span></div>
+        <form method="post" class="form-box settings-compact-form password-grid-form" data-confirm-title="تأكيد تغيير الرمز السري" data-confirm-body="تم إدخال الرمز الحالي والرمز الجديد. هل تريد تنفيذ تغيير الرمز السري؟">
+          {% csrf_token %}<input type="hidden" name="action" value="password">
+          <p><label for="{{ password_form.old_password.id_for_label }}">الرمز الحالي</label>{{ password_form.old_password }}</p>
+          <p><label for="{{ password_form.new_password1.id_for_label }}">الرمز الجديد</label>{{ password_form.new_password1 }}</p>
+          <p><label for="{{ password_form.new_password2.id_for_label }}">تأكيد الرمز الجديد</label>{{ password_form.new_password2 }}</p>
+          <button class="primary">تغيير الرمز السري</button>
+        </form>
+      </section>
+
+      <section class="settings-strip-panel" data-settings-panel="delete" role="tabpanel">
+        <div class="strip-panel-title delete-title"><h3>حذف الحساب</h3><span>إجراء نهائي يحذف الحساب والبيانات المرتبطة به</span></div>
+        <form method="post" class="form-box settings-compact-form delete-grid-form" data-confirm-title="تأكيد حذف الحساب" data-confirm-body="تم إدخال الرمز السري. هل تريد حذف الحساب وجميع البيانات المرتبطة به؟ لا يمكن التراجع عن هذا الإجراء.">
+          {% csrf_token %}<input type="hidden" name="action" value="delete_account">
+          <p><label for="{{ delete_form.password.id_for_label }}">كلمة المرور للتأكيد</label>{{ delete_form.password }}</p>
+          <button class="danger">حذف الحساب</button>
+        </form>
+      </section>
+    </div>
+  </section>
+</div>
+
+<div class="planner-alert-backdrop settings-confirm" id="settingsConfirmModal" aria-hidden="true">
+  <section class="planner-alert-dialog settings-confirm-dialog">
+    <div class="planner-alert-head">
+      <button type="button" class="btn small" onclick="closeSettingsConfirm()">إغلاق</button>
+      <h3 id="settingsConfirmTitle">تأكيد الإجراء</h3>
+    </div>
+    <div class="planner-alert-body settings-confirm-body">
+      <div class="logout-icon">!</div>
+      <p id="settingsConfirmBody">هل تريد تنفيذ الإجراء؟</p>
+      <div class="toolbar logout-actions">
+        <button class="btn" type="button" onclick="closeSettingsConfirm()">إلغاء</button>
+        <button class="btn danger" type="button" onclick="submitSettingsConfirmed()">نعم، تنفيذ</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var pendingSettingsForm = null;
+  window.closeSettingsConfirm = function(){
+    var modal = document.getElementById('settingsConfirmModal');
+    if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}
+    pendingSettingsForm = null;
+  };
+  window.submitSettingsConfirmed = function(){
+    if(!pendingSettingsForm) return;
+    pendingSettingsForm.dataset.confirmed = '1';
+    pendingSettingsForm.submit();
+  };
+  document.querySelectorAll('form[data-confirm-title]').forEach(function(form){
+    form.addEventListener('submit', function(event){
+      if(form.dataset.confirmed === '1') return;
+      event.preventDefault();
+      pendingSettingsForm = form;
+      var modal = document.getElementById('settingsConfirmModal');
+      var title = document.getElementById('settingsConfirmTitle');
+      var body = document.getElementById('settingsConfirmBody');
+      if(title){title.textContent = form.dataset.confirmTitle || 'تأكيد الإجراء';}
+      if(body){body.textContent = form.dataset.confirmBody || 'هل تريد تنفيذ الإجراء؟';}
+      if(modal){modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
+    });
+  });
+
+  var tabButtons = document.querySelectorAll('[data-settings-tab]');
+  var tabPanels = document.querySelectorAll('[data-settings-panel]');
+  var storageKey = 'mofa-settings-active-tab';
+
+  function activateSettingsTab(tab){
+    var found = false;
+    tabButtons.forEach(function(item){
+      var active = item.getAttribute('data-settings-tab') === tab;
+      if(active){found = true;}
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    tabPanels.forEach(function(panel){
+      panel.classList.toggle('is-active', panel.getAttribute('data-settings-panel') === tab);
+    });
+    return found;
+  }
+
+  tabButtons.forEach(function(button){
+    button.addEventListener('click', function(){
+      var tab = button.getAttribute('data-settings-tab');
+      try{localStorage.setItem(storageKey, tab);}catch(error){}
+      activateSettingsTab(tab);
+    });
+  });
+
+  document.querySelectorAll('form').forEach(function(form){
+    form.addEventListener('submit', function(){
+      var panel = form.closest('[data-settings-panel]');
+      if(panel){
+        try{localStorage.setItem(storageKey, panel.getAttribute('data-settings-panel'));}catch(error){}
+      }
+    });
+  });
+
+  try{
+    var savedTab = localStorage.getItem(storageKey);
+    if(savedTab && !activateSettingsTab(savedTab)){
+      localStorage.removeItem(storageKey);
+      activateSettingsTab('profile');
+    }
+  }catch(error){}
+})();
+</script>
+{% endblock %}

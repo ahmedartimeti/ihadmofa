@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="settings-backdrop">
+  <section class="dialog settings-dialog">
+    <div class="dialog-head"><h2>فتح الإعدادات</h2><a class="btn small" href="{% url 'planner:tasks' %}">إغلاق</a></div>
+    <form method="post" class="form-box inline">
+      {% csrf_token %}<input type="hidden" name="action" value="unlock">
+      {{ unlock_form.as_p }}
+      <div class="toolbar"><button class="primary">فتح</button><a class="btn" href="#recoverBox">نسيت الرمز؟</a></div>
+    </form>
+    <div id="recoverBox" class="recover-box">
+      <div class="head"><h3>نسيت الرمز؟</h3></div>
+      <div class="content">لأسباب الأمان لا يمكن عرض الرمز القديم لأنه محفوظ مشفراً. بعد الإجابة الصحيحة عن أسئلة التحقق يمكنك تعيين رمز جديد ثم الدخول للإعدادات.</div>
+      <form method="post" class="form-box inline">
+        {% csrf_token %}<input type="hidden" name="action" value="recover">
+        {{ recovery_form.as_p }}
+        <button class="gold">تحقق</button>
+      </form>
+      {% if recovery_verified %}
+      <form method="post" class="form-box inline soft-panel">
+        {% csrf_token %}<input type="hidden" name="action" value="recovery_password">
+        <h3>تعيين رمز جديد</h3>
+        {{ recovery_password_form.as_p }}
+        <button class="primary">حفظ الرمز الجديد وفتح الإعدادات</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

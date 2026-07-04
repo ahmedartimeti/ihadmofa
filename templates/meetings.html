@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="top page-title-row"><div><h1>المواعيد</h1><p>تنبيه الموعد يظهر بنفس أزرار المهمة: اطلعت، أنجز، تأجيل، حذف.</p></div><form method="get" class="search"><input name="q" value="{{ q }}" placeholder="بحث"><button class="btn">بحث</button></form></div>
+<div class="grid">
+  <section class="panel"><div class="head"><h3>قائمة المواعيد</h3></div>
+    {% for meeting in meetings %}
+    <div class="task-card meeting-card">
+      <div class="task-main"><div class="task-title"><strong>{{ meeting.title }}</strong><span class="time-pill">{{ meeting.meeting_time }}</span></div><p>{{ meeting.meeting_date }} - {{ meeting.location|default:'غير محدد' }}</p><span class="pill">{{ meeting.get_status_display }}</span></div>
+      <div class="task-actions">
+        <a class="btn primary small" href="{% url 'meetings:meeting_done' meeting.pk %}">أنجز</a>
+        <a class="btn gold small" href="{% url 'meetings:meeting_defer' meeting.pk %}">تأجيل</a>
+        <a class="btn small" href="{% url 'meetings:meeting_edit' meeting.pk %}">تعديل</a>
+        <button class="btn small" type="button" onclick="showPlannerAlertFromButton(this)" data-kind="meeting" data-key="manual-meeting-{{ meeting.pk }}" data-title="{{ meeting.title|escape }}" data-date="{{ meeting.meeting_date|date:'Y-m-d' }}" data-time="{{ meeting.meeting_time|time:'H:i' }}" data-meta="{{ meeting.location|default:'غير محدد'|escape }}" data-notes="{{ meeting.notes|default:'حان وقت الموعد أو اقترب موعده.'|escape }}" data-done-url="{% url 'meetings:meeting_done' meeting.pk %}" data-defer-url="{% url 'meetings:meeting_defer' meeting.pk %}" data-delete-url="{% url 'meetings:meeting_delete' meeting.pk %}">تنبيه</button>
+        <a class="btn danger small" href="{% url 'meetings:meeting_delete' meeting.pk %}">حذف</a>
+      </div>
+    </div>
+    {% empty %}<div class="content">لا توجد مواعيد.</div>{% endfor %}
+  </section>
+  <section class="panel"><div class="head"><h3>{% if editing %}تعديل موعد{% else %}إضافة موعد{% endif %}</h3></div><form method="post" action="{% if editing %}{% url 'meetings:meeting_edit' editing.pk %}{% else %}{% url 'meetings:meeting_add' %}{% endif %}" class="form-box inline">{% csrf_token %}{{ form.as_p }}<button class="primary">حفظ</button>{% if editing %}<a class="btn" href="{% url 'meetings:meetings' %}">إلغاء</a>{% endif %}</form></section>
+</div>
+{% endblock %}

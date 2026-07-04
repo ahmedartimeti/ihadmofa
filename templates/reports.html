@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="top reports-top">
+  <h1>التقارير</h1>
+  <form method="get" class="search">
+    <select name="period">
+      <option value="daily" {% if period == 'daily' %}selected{% endif %}>يومي</option>
+      <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>أسبوعي</option>
+      <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>شهري</option>
+      <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>سنوي</option>
+    </select>
+    <button>عرض</button>
+    <a class="btn primary" href="{% url 'reports:export' %}?period={{ period }}">تصدير Excel</a>
+  </form>
+</div>
+
+<div class="stats reports-stats">
+  <div class="stat"><span>الإجمالي</span><strong>{{ stats.total }}</strong></div>
+  <div class="stat"><span>المنجزة</span><strong>{{ stats.done }}</strong></div>
+  <div class="stat"><span>المتبقية</span><strong>{{ stats.open }}</strong></div>
+  <div class="stat"><span>المؤجلة</span><strong>{{ stats.deferred }}</strong></div>
+</div>
+
+<div class="grid reports-grid">
+  <section class="panel report-chart-card">
+    <div class="head"><h3>الإنجاز</h3></div>
+    <div class="report-chart-body">
+      <div class="donut report-donut" style="background: {{ stats.completion_donut }}"><span>{{ stats.total }}</span></div>
+      <div class="chart-legend">
+        <a class="legend-row clickable-legend" href="{{ stats.done_url }}"><i class="legend-dot done"></i><span>منجزة</span><strong>{{ stats.done }}</strong></a>
+        <a class="legend-row clickable-legend" href="{{ stats.open_url }}"><i class="legend-dot open"></i><span>متبقية</span><strong>{{ stats.open }}</strong></a>
+        <a class="legend-row clickable-legend" href="{{ stats.deferred_url }}"><i class="legend-dot deferred"></i><span>مؤجلة</span><strong>{{ stats.deferred }}</strong></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel report-chart-card">
+    <div class="head"><h3>الأهمية</h3></div>
+    <div class="report-chart-body">
+      <div class="donut report-donut" style="background: {{ stats.priority_donut }}"><span>{{ stats.total }}</span></div>
+      <div class="chart-legend">
+        <a class="legend-row clickable-legend" href="{{ stats.urgent_url }}"><i class="legend-dot urgent-dot"></i><span>عاجلة</span><strong>{{ stats.urgent }}</strong></a>
+        <a class="legend-row clickable-legend" href="{{ stats.important_url }}"><i class="legend-dot important-dot"></i><span>مهمة</span><strong>{{ stats.important }}</strong></a>
+        <a class="legend-row clickable-legend" href="{{ stats.normal_url }}"><i class="legend-dot normal-dot"></i><span>عادية</span><strong>{{ stats.normal }}</strong></a>
+      </div>
+    </div>
+  </section>
+</div>
+<section class="panel report-types-panel">
+  <div class="head"><h3>أعداد الأعمال حسب النوع</h3></div>
+  <div class="type-report-body">
+    <div class="type-count-grid">
+      {% for item in type_counts %}
+        <a class="type-count-item clickable-type" href="{{ item.url }}"><span>{{ item.label }}</span><strong>{{ item.value }}</strong></a>
+      {% endfor %}
+    </div>
+    <div class="clustered-column-chart" aria-label="مخطط أعمدة حسب نوع العمل">
+      {% for item in type_counts %}
+        <a class="column-item clickable-column" href="{{ item.url }}">
+          <div class="column-value">{{ item.value }}</div>
+          <div class="column-bar" style="height: {{ item.height }}px"></div>
+          <div class="column-label">{{ item.label|cut:'عدد ' }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

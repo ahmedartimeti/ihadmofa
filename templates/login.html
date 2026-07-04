@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}IHAD - تسجيل الدخول / Sign In{% endblock %}
+{% block auth_content %}
+<div class="ihad-login-page">
+  <section class="ihad-login-card">
+    <div class="ihad-login-brand">
+      <img src="{% static 'img/logo.jpg' %}" alt="وزارة الخارجية العراقية / Ministry of Foreign Affairs" class="ihad-login-logo">
+      <p class="ihad-country">جمهورية العراق<br><span>Republic of Iraq</span></p>
+      <p class="ihad-ministry-name">وزارة الخارجية العراقية<br><span>Ministry of Foreign Affairs</span></p>
+      <h1>IHAD</h1>
+      <h2>Iraqi Integrated Hub for Administrative Diplomacy</h2>
+      <p class="ihad-subtitle">المنصة الذكية لإدارة سير العمل الدبلوماسي<br><span>Smart Workflow Management Platform</span></p>
+    </div>
+
+    <div class="ihad-login-panel">
+      <div class="ihad-login-heading">
+        <span>دخول آمن / Secure Access</span>
+        <h3>تسجيل الدخول / Sign In</h3>
+      </div>
+      <form method="post" action="{% url 'accounts:login' %}" class="ihad-login-form" id="loginFormCard">
+        {% csrf_token %}
+        <div class="ihad-field">
+          <label for="{{ form.username.id_for_label }}">اسم المستخدم / Username</label>
+          {{ form.username }}
+        </div>
+        <div class="ihad-field">
+          <label for="{{ form.password.id_for_label }}">كلمة المرور / Password</label>
+          {{ form.password }}
+        </div>
+        {% if form.errors %}<div class="ihad-login-error">تحقق من اسم المستخدم وكلمة المرور / Please check your username and password.</div>{% endif %}
+        <button class="ihad-signin-button" type="submit">تسجيل الدخول / Sign In</button>
+      </form>
+      <button class="ihad-register-toggle" type="button" data-auth-tab="register">إنشاء حساب موظف / Create employee account</button>
+      <form method="post" action="{% url 'accounts:register' %}" class="ihad-register-form" id="registerFormCard">
+        {% csrf_token %}
+        <h3>إنشاء حساب / Create Account</h3>
+        {{ register_form.as_p }}
+        <button class="gold full">إنشاء الحساب / Create Account</button>
+        <button class="btn full" type="button" data-auth-tab="login">العودة إلى تسجيل الدخول / Back to Sign In</button>
+      </form>
+    </div>
+  </section>
+  <footer class="ihad-login-footer">
+    <span>وزارة الخارجية العراقية / Ministry of Foreign Affairs</span>
+    <span>جمهورية العراق / Republic of Iraq</span>
+    <span>Version 2.2</span>
+  </footer>
+</div>
+<script>
+document.querySelectorAll('[data-auth-tab]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var register = btn.dataset.authTab === 'register';
+    document.getElementById('loginFormCard').style.display = register ? 'none' : 'grid';
+    document.getElementById('registerFormCard').style.display = register ? 'grid' : 'none';
+    document.querySelector('.ihad-register-toggle').style.display = register ? 'none' : 'block';
+  });
+});
+</script>
+{% endblock %}

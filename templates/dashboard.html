@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="top"><div><h1>الرئيسية</h1><p>{{ today }}</p></div></div>
+<div class="stats dashboard-stats">
+  <div class="stat"><span>مهام اليوم</span><strong>{{ today_tasks.count }}</strong></div>
+  <div class="stat"><span>مهام يوم غد</span><strong>{{ tomorrow_tasks.count }}</strong></div>
+  <div class="stat"><span>مهام مستقبلية</span><strong>{{ future_count }}</strong></div>
+  <div class="stat"><span>سابقة / متأخرة</span><strong>{{ past_count }}</strong></div>
+  <div class="stat"><span>الكتب</span><strong>{{ book_count }}</strong></div>
+  <div class="stat"><span>المواعيد</span><strong>{{ meeting_count }}</strong></div>
+  <div class="stat"><span>المنجزة</span><strong>{{ done_count }}</strong></div>
+  <div class="stat"><span>العاجلة اليوم</span><strong>{{ urgent_today }}</strong></div>
+  <div class="stat"><span>العاجلة غداً</span><strong>{{ urgent_tomorrow }}</strong></div>
+</div>
+<div class="grid">
+  <section class="panel">
+    <div class="head"><h3>مهام اليوم</h3><a class="btn primary" href="{% url 'planner:tasks' %}">إدارة المهام</a></div>
+    {% for task in today_tasks %}
+    <div class="row"><div><strong>{{ task.title }}</strong><p>{{ task.due_time }} - {{ task.get_task_type_display }}</p></div><span class="pill {{ task.priority|lower }}">{{ task.get_priority_display }}</span></div>
+    {% empty %}<div class="content">لا توجد مهام لهذا اليوم.</div>{% endfor %}
+  </section>
+  <section class="panel">
+    <div class="head"><h3>مواعيد اليوم</h3><a class="btn" href="{% url 'meetings:meetings' %}">إدارة المواعيد</a></div>
+    {% for meeting in meetings_today %}
+    <div class="row"><div><strong>{{ meeting.title }}</strong><p>{{ meeting.meeting_time }} - {{ meeting.location|default:'غير محدد' }}</p></div><span class="pill">{{ meeting.get_status_display }}</span></div>
+    {% empty %}<div class="content">لا توجد اجتماعات لهذا اليوم.</div>{% endfor %}
+  </section>
+</div>
+{% endblock %}

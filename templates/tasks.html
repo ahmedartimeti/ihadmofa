@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="top page-title-row">
+  <div>
+    <h1>{% if active_section == 'past' %}مهام سابقة{% elif active_section == 'tomorrow' %}مهام يوم غد{% elif active_section == 'future' %}مهام مستقبلية{% else %}مهام اليوم{% endif %}</h1>
+    <p>كل صفحة تعرض خانتها فقط حسب تاريخ المهمة.</p>
+  </div>
+</div>
+<div class="stats dashboard-stats task-order-rtl">
+  <a class="stat red stat-link" href="{% url 'planner:tasks' %}?section=past"><span>مهام سابقة</span><strong>{{ past_count }}</strong></a>
+  <a class="stat gold stat-link task-stat-today" href="{% url 'planner:tasks' %}?section=today"><span>مهام اليوم</span><strong>{{ today_count }}</strong></a>
+  <a class="stat blue stat-link" href="{% url 'planner:tasks' %}?section=tomorrow"><span>مهام يوم غد</span><strong>{{ tomorrow_count }}</strong></a>
+  <a class="stat blue stat-link" href="{% url 'planner:tasks' %}?section=future"><span>مهام مستقبلية</span><strong>{{ future_count }}</strong></a>
+</div>
+<div class="panel filter-panel">
+  <form method="get" class="sort-row">
+    <input type="hidden" name="section" value="{{ active_section }}">
+    <input name="q" value="{{ q }}" placeholder="بحث">
+    <select name="status">
+      <option value="">كل الحالات</option>
+      <option value="OPEN" {% if status == 'OPEN' %}selected{% endif %}>مفتوح</option>
+      <option value="DONE" {% if status == 'DONE' %}selected{% endif %}>منجز</option>
+      <option value="DEFERRED" {% if status == 'DEFERRED' %}selected{% endif %}>مؤجل</option>
+      <option value="OVERDUE" {% if status == 'OVERDUE' %}selected{% endif %}>متأخر</option>
+    </select>
+    <button class="btn">بحث</button>
+  </form>
+</div>
+<div class="grid tasks-grid">
+  <section class="tasks-stack">
+    {% if active_section == 'past' %}
+      {% include 'tasks_section.html' with section_id='past' title='مهام سابقة' tasks=active_tasks empty='لا توجد مهام سابقة.' %}
+    {% elif active_section == 'tomorrow' %}
+      {% include 'tasks_section.html' with section_id='tomorrow' title='مهام يوم غد' tasks=active_tasks empty='لا توجد مهام ليوم غد.' %}
+    {% elif active_section == 'future' %}
+      {% include 'tasks_section.html' with section_id='future' title='مهام مستقبلية' tasks=active_tasks empty='لا توجد مهام مستقبلية.' %}
+    {% else %}
+      {% include 'tasks_section.html' with section_id='today' title='مهام اليوم' tasks=active_tasks empty='لا توجد مهام لهذا اليوم.' %}
+    {% endif %}
+  </section>
+  <section class="panel side-form">
+    <div class="head"><h3>{% if editing %}تعديل مهمة{% else %}إضافة مهمة{% endif %}</h3></div>
+    <form method="post" action="{% if editing %}{% url 'planner:task_edit' editing.pk %}{% else %}{% url 'planner:task_add' %}{% endif %}" class="form-box inline">
+      {% csrf_token %}
+      {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+      {{ form.as_p }}
+      <button class="primary">{% if editing %}حفظ التعديل{% else %}حفظ المهمة{% endif %}</button>
+      {% if editing %}<a class="btn" href="{% url 'planner:tasks' %}?section={{ active_section }}">إلغاء</a>{% endif %}
+    </form>
+  </section>
+</div>
+
+<script>
+(function(){
+  function updateReferenceLabel(){
+    var typeField=document.getElementById('id_task_type');
+    var refField=document.getElementById('id_reference_number');
+    if(!typeField || !refField) return;
+    var label=document.querySelector('label[for="id_reference_number"]');
+    if(!label) return;
+    var labels={
+      REVIEW:'رقم المطالعة',
+      INCOMING:'رقم الكتاب الوارد',
+      OUTGOING:'رقم الكتاب الصادر',
+      CIRCULAR:'رقم التعميم',
+      FOLLOWUP:'رقم المتابعة',
+      DELIBERATION:'رقم المداولة',
+      MEETING:'رقم اختياري',
+      CALL:'رقم اختياري',
+      OTHER:'رقم اختياري'
+    };
+    var placeholders={
+      REVIEW:'مثال: رقم المطالعة إن وجد',
+      INCOMING:'مثال: رقم الكتاب الوارد إن وجد',
+      OUTGOING:'مثال: رقم الكتاب الصادر إن وجد',
+      CIRCULAR:'مثال: رقم التعميم إن وجد',
+      FOLLOWUP:'مثال: رقم المتابعة إن وجد',
+      DELIBERATION:'مثال: رقم المداولة إن وجد'
+    };
+    var text=labels[typeField.value] || 'رقم اختياري';
+    label.innerHTML=text+' <span class="optional-label">اختياري</span>';
+    refField.placeholder=placeholders[typeField.value] || 'اكتب الرقم إن وجد';
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    var typeField=document.getElementById('id_task_type');
+    if(typeField){ typeField.addEventListener('change',updateReferenceLabel); }
+    updateReferenceLabel();
+  });
+})();
+</script>
+
+{% endblock %}

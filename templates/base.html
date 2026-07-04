@@ -1,0 +1,272 @@
+{% load static %}<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}IHAD{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20260630-2325">
+  <link rel="manifest" href="{% url 'pwa_manifest' %}">
+  <meta name="theme-color" content="#312e81">
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="app-shell">
+  <aside class="side mofa-side">
+    <div class="brand vertical-brand">
+      <img src="{% static 'img/logo.jpg' %}" alt="وزارة الخارجية">
+      <div><h3>IHAD</h3><small>المنصة الذكية لإدارة سير العمل الدبلوماسي</small></div>
+    </div>
+    {% if current_profile %}
+    <div class="employee-card employee-card-clean">
+      <div class="employee-topline">
+        <div class="employee-text">
+          <strong>{{ current_profile.full_name }}</strong>
+          <span>{{ current_profile.job_title|default:'العنوان الوظيفي غير محدد' }}</span>
+        </div>
+        {% if current_profile.photo %}<img src="{{ current_profile.photo.url }}" alt="الصورة الشخصية" class="profile-photo">{% else %}<div class="profile-avatar">ش</div>{% endif %}
+      </div>
+      <div class="employee-details">
+        <span>{{ current_profile.department }}{% if current_profile.section %} / {{ current_profile.section }}{% endif %}</span>
+        {% if current_profile.email_for_alerts %}<span>{{ current_profile.email_for_alerts }}</span>{% endif %}
+        <span>{{ current_date|date:'l d F Y' }}</span>
+      </div>
+    </div>
+    {% endif %}
+    <nav class="nav-menu">
+      {% with active_section=request.GET.section|default:'today' active_namespace=request.resolver_match.namespace active_url=request.resolver_match.url_name %}
+      {% if quick_summary.past_count %}<a href="{% url 'planner:tasks' %}?section=past" class="{% if active_namespace == 'planner' and active_section == 'past' %}active-nav{% endif %}">مهام سابقة</a>{% endif %}
+      <a href="{% url 'planner:tasks' %}?section=today" class="{% if active_namespace == 'planner' and active_section == 'today' %}active-nav{% endif %}">مهام اليوم</a>
+      <a href="{% url 'planner:tasks' %}?section=tomorrow" class="{% if active_namespace == 'planner' and active_section == 'tomorrow' %}active-nav{% endif %}">مهام يوم غد</a>
+      {% if quick_summary.future_count %}<a href="{% url 'planner:tasks' %}?section=future" class="{% if active_namespace == 'planner' and active_section == 'future' %}active-nav{% endif %}">مهام مستقبلية</a>{% endif %}
+      <a href="{% url 'books:books' %}" class="{% if active_namespace == 'books' %}active-nav{% endif %}">الكتب والمتابعات</a>
+      <a href="{% url 'reports:reports' %}" class="{% if active_namespace == 'reports' %}active-nav{% endif %}">التقارير</a>
+      <a href="{% url 'settings' %}" class="{% if active_url == 'settings' %}active-nav{% endif %}">الإعدادات</a>
+      <a href="{% url 'accounts:logout' %}" class="logout-nav" onclick="return confirmLogout(event, this.href)">تسجيل الخروج</a>
+      {% endwith %}
+    </nav>
+    {% if quick_summary %}
+    <section class="quick-summary compact-summary">
+      <strong>ملخص سريع</strong>
+      <div class="mini-grid">
+        <span>بداية الدوام<br><b>{{ quick_summary.work_start }}</b></span>
+        <span>نهاية الدوام<br><b>{{ quick_summary.work_end }}</b></span>
+        <span>أعمال اليوم<br><b>{{ quick_summary.today_count }}</b></span>
+        <span>أعمال الغد<br><b>{{ quick_summary.tomorrow_count }}</b></span>
+        <span>عاجل اليوم<br><b>{{ quick_summary.urgent_today }}</b></span>
+        <span>عاجل الغد<br><b>{{ quick_summary.urgent_tomorrow }}</b></span>
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+  <main class="main">
+    <div class="version-ribbon ihad-ribbon"><strong>IHAD</strong> - المنصة الذكية لإدارة سير العمل الدبلوماسي | وزارة الخارجية العراقية | جمهورية العراق | الإصدار 2.2</div>
+    <div class="toolbar top-actions">
+      <button class="btn gold" type="button" onclick="showStartupPanel()">تذكير الصباح</button>
+      <a class="btn primary" href="{% url 'planner:tasks' %}">إضافة مهمة</a>
+      <button class="btn" type="button" onclick="showMailSummary()">ملخص البريد</button>
+      <button class="btn" type="button" onclick="enableDeviceNotifications()">تنبيهات الجهاز</button>
+      <button class="btn" type="button" onclick="window.print()">طباعة</button>
+    </div>
+    {% if messages %}<div class="messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+    <footer class="ihad-main-footer"><span>وزارة الخارجية العراقية</span><span>جمهورية العراق</span><span>الإصدار 2.2</span></footer>
+  </main>
+</div>
+
+
+<div class="planner-alert-backdrop logout-confirm" id="logoutConfirmModal" aria-hidden="true">
+  <section class="planner-alert-dialog logout-dialog">
+    <div class="planner-alert-head">
+      <button type="button" class="btn small" onclick="closeLogoutConfirm()">إغلاق</button>
+      <h3>تأكيد تسجيل الخروج</h3>
+    </div>
+    <div class="planner-alert-body logout-content">
+      <div class="logout-icon">!</div>
+      <h4>هل فعلًا تريد الخروج؟</h4>
+      <p>سيتم إنهاء الجلسة الحالية والعودة إلى صفحة الدخول.</p>
+      <div class="toolbar logout-actions">
+        <button class="btn" type="button" onclick="closeLogoutConfirm()">إلغاء</button>
+        <a class="btn danger" id="logoutConfirmLink" href="{% url 'accounts:logout' %}">نعم، تسجيل الخروج</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="planner-alert-backdrop" id="plannerAlert" aria-hidden="true">
+  <section class="planner-alert-dialog">
+    <div class="planner-alert-head"><button type="button" class="btn small" data-alert-close>إغلاق</button><h3 id="alertTitle">تنبيه</h3></div>
+    <div class="planner-alert-body"><div class="alert-card"><div class="alert-icon" id="alertIcon">!</div><div class="alert-main"><h4 id="alertItemTitle"></h4><div class="alert-meta"><span id="alertDate"></span><span id="alertTime"></span><span id="alertMeta"></span></div><p id="alertNotes"></p><div class="toolbar alert-actions"><button type="button" class="btn" data-alert-close>اطلعت</button><a class="btn green" id="alertDone" href="#">أنجز</a><a class="btn gold" id="alertDefer" href="#">تأجيل</a><a class="btn danger" id="alertDelete" href="#">حذف</a></div></div></div></div>
+  </section>
+</div>
+
+<div class="planner-alert-backdrop" id="mailSummaryModal" aria-hidden="true">
+  <section class="planner-alert-dialog mail-summary-dialog">
+    <div class="planner-alert-head"><button type="button" class="btn small" onclick="closeMailSummary()">إغلاق</button><h3>ملخص البريد</h3></div>
+    <div class="planner-alert-body">
+      <p>هذا الملخص يعرض مهام اليوم الحالية، بما فيها المهام التي كانت مخططة ليوم غد بالأمس وأصبحت اليوم ضمن مهام اليوم. لاحقاً يمكن ربطه بإرسال بريد إلكتروني.</p>
+      <form id="sendTodayPlanEmailForm" method="post" action="{% url 'planner:send_today_plan_email' %}" class="mail-command-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="mail-toggle-command" type="submit" onclick="this.classList.toggle('is-on')" aria-label="تشغيل إرسال خطط اليوم"><span class="toggle-track"><img src="{% static 'img/mail-toggle-icon.png' %}" alt=""></span><span class="toggle-copy"><b>OFF</b><small>تشغيل وإرسال خطط اليوم إلى الإيميل</small></span></button>
+      </form>
+      <div class="mail-summary-list">
+        {% for task in startup_tasks %}<div class="startup-item"><strong>{{ task.due_time }} - {{ task.title }}</strong><span>{{ task.get_task_type_display }} / {{ task.get_priority_display }}</span></div>{% empty %}<div class="content">لا توجد مهام اليوم لإرسالها في الملخص.</div>{% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="alertSources" hidden>
+  {% for item in alert_items %}
+  <div class="alert-source" data-kind="{{ item.kind }}" data-key="{{ item.key }}" data-title="{{ item.title|escape }}" data-date="{{ item.date|date:'Y-m-d' }}" data-time="{{ item.time|time:'H:i' }}" data-meta="{{ item.meta|escape }}" data-notes="{{ item.notes|escape }}" data-done-url="{{ item.done_url }}" data-defer-url="{{ item.defer_url }}" data-delete-url="{{ item.delete_url }}"></div>
+  {% endfor %}
+</div>
+
+<section class="startup-panel" id="startupPanel">
+  <div class="startup-head"><strong>خطط اليوم</strong><button type="button" aria-label="إغلاق" onclick="hideStartupPanel()">×</button></div>
+  <div class="startup-body">
+    <div class="startup-item official"><strong>الدوام الرسمي</strong><span>من 07:00 صباحاً حتى 14:00 ظهراً</span></div>
+    {% for task in startup_tasks %}<div class="startup-item"><strong>{{ task.due_time }} - {{ task.title }}</strong><span>{{ task.due_date }} / {{ task.get_task_type_display }} / {{ task.get_priority_display }}</span></div>{% empty %}<div class="startup-item"><strong>لا توجد مهام حالية</strong><span>يمكنك إضافة مهام اليوم من صفحة مهام اليوم.</span></div>{% endfor %}
+  </div>
+</section>
+
+<script>
+(function(){
+  function text(node, value){ if(node){ node.textContent = value || ''; } }
+  function alertDataFromElement(el){ return {kind:el.dataset.kind,key:el.dataset.key,title:el.dataset.title,date:el.dataset.date,time:el.dataset.time,meta:el.dataset.meta,notes:el.dataset.notes,doneUrl:el.dataset.doneUrl,deferUrl:el.dataset.deferUrl,deleteUrl:el.dataset.deleteUrl}; }
+  var alertAudioContext=null;
+  function getAlertAudioContext(){
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContext) return null;
+    if(!alertAudioContext){alertAudioContext = new AudioContext();}
+    if(alertAudioContext.state === 'suspended'){alertAudioContext.resume().catch(function(){});}
+    return alertAudioContext;
+  }
+  function unlockAlertSound(){
+    var ctx=getAlertAudioContext();
+    if(!ctx) return;
+    var gain=ctx.createGain();
+    gain.gain.value=0.0001;
+    gain.connect(ctx.destination);
+    var osc=ctx.createOscillator();
+    osc.connect(gain);
+    osc.start();
+    osc.stop(ctx.currentTime+0.01);
+  }
+  function playAlertSound(kind){
+    if(kind !== 'task' && kind !== 'meeting') return;
+    try{
+      var ctx = getAlertAudioContext();
+      if(!ctx) return;
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.62);
+      gain.connect(ctx.destination);
+      var tones = kind === 'meeting' ? [740, 988, 740] : [880, 1175];
+      tones.forEach(function(freq, index){
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + (index * 0.18));
+        osc.connect(gain);
+        osc.start(ctx.currentTime + (index * 0.18));
+        osc.stop(ctx.currentTime + (index * 0.18) + 0.15);
+      });
+    }catch(error){}
+  }
+  ['click','keydown','touchstart'].forEach(function(eventName){
+    window.addEventListener(eventName, unlockAlertSound, {once:true, passive:true});
+  });
+  function showPlannerAlert(data, automatic){
+    var modal=document.getElementById('plannerAlert'); if(!modal) return; var isMeeting=data.kind==='meeting';
+    text(document.getElementById('alertTitle'), isMeeting ? 'تنبيه موعد' : 'تنبيه مهمة');
+    text(document.getElementById('alertIcon'), isMeeting ? '⏰' : '!');
+    text(document.getElementById('alertItemTitle'), data.title);
+    text(document.getElementById('alertDate'), data.date);
+    text(document.getElementById('alertTime'), data.time);
+    text(document.getElementById('alertMeta'), data.meta || 'غير محدد');
+    text(document.getElementById('alertNotes'), data.notes || (isMeeting ? 'حان وقت الموعد أو اقترب موعده.' : 'حان وقت المهمة أو اقترب موعدها.'));
+    document.getElementById('alertDone').href=data.doneUrl||'#'; document.getElementById('alertDefer').href=data.deferUrl||'#'; document.getElementById('alertDelete').href=data.deleteUrl||'#';
+    modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); playAlertSound(data.kind); if(automatic&&data.key){localStorage.setItem('mofa_alert_seen_'+data.key,'1');}
+  }
+  window.showPlannerAlertFromButton=function(button){showPlannerAlert(alertDataFromElement(button),false);};
+  document.querySelectorAll('[data-alert-close]').forEach(function(btn){btn.addEventListener('click',function(){var modal=document.getElementById('plannerAlert');modal.classList.remove('show');modal.setAttribute('aria-hidden','true');});});
+  function minutesOf(value){var parts=String(value||'00:00').split(':');return (parseInt(parts[0]||'0',10)*60)+parseInt(parts[1]||'0',10);}
+  function checkAlerts(){var now=new Date();var today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');var nowMinutes=now.getHours()*60+now.getMinutes();document.querySelectorAll('#alertSources .alert-source').forEach(function(el){var data=alertDataFromElement(el);if(data.date!==today||!data.time||!data.key)return;if(localStorage.getItem('mofa_alert_seen_'+data.key))return;if(nowMinutes>=minutesOf(data.time)-5){showPlannerAlert(data,true);}});}
+  window.confirmLogout=function(event, href){
+    if(event){event.preventDefault();}
+    var modal=document.getElementById('logoutConfirmModal');
+    var link=document.getElementById('logoutConfirmLink');
+    if(link){link.href=href;}
+    if(modal){modal.classList.add('show');modal.setAttribute('aria-hidden','false'); return false;}
+    window.location.href=href;
+    return false;
+  };
+  window.closeLogoutConfirm=function(){
+    var modal=document.getElementById('logoutConfirmModal');
+    if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}
+  };
+  window.showStartupPanel=function(){var p=document.getElementById('startupPanel');if(p){p.style.display='block';}};
+  window.hideStartupPanel=function(){var p=document.getElementById('startupPanel');if(p){p.style.display='none';}};
+
+  function getCookie(name){
+    var value = '; ' + document.cookie;
+    var parts = value.split('; ' + name + '=');
+    if(parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  }
+  function urlBase64ToUint8Array(base64String){
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var rawData = window.atob(base64);
+    var outputArray = new Uint8Array(rawData.length);
+    for(var i=0;i<rawData.length;i++){outputArray[i]=rawData.charCodeAt(i);}
+    return outputArray;
+  }
+  window.enableDeviceNotifications = async function(){
+    try{
+      if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)){
+        alert('هذا المتصفح لا يدعم تنبيهات الجهاز.');
+        return;
+      }
+      var keyResponse = await fetch('{% url 'notifications:push_public_key' %}', {credentials:'same-origin'});
+      var keyData = await keyResponse.json();
+      if(!keyData.configured || !keyData.publicKey){
+        alert('تنبيهات الجهاز جاهزة في البرنامج، لكن يجب إضافة مفاتيح Web Push عند رفع الموقع على الإنترنت.');
+        return;
+      }
+      var permission = await Notification.requestPermission();
+      if(permission !== 'granted'){
+        alert('لم يتم السماح بالتنبيهات على هذا الجهاز.');
+        return;
+      }
+      var registration = await navigator.serviceWorker.register('/sw.js');
+      var subscription = await registration.pushManager.getSubscription();
+      if(!subscription){
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly:true,
+          applicationServerKey:urlBase64ToUint8Array(keyData.publicKey)
+        });
+      }
+      var saveResponse = await fetch('{% url 'notifications:push_subscribe' %}', {
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body:JSON.stringify(subscription)
+      });
+      var saveData = await saveResponse.json();
+      alert(saveData.message || 'تم تفعيل تنبيهات هذا الجهاز.');
+    }catch(error){
+      alert('تعذر تفعيل تنبيهات الجهاز الآن. تأكد أن الموقع يعمل عبر HTTPS عند الرفع.');
+    }
+  };
+  window.showMailSummary=function(){var m=document.getElementById('mailSummaryModal');if(m){m.classList.add('show');m.setAttribute('aria-hidden','false');}};
+  window.closeMailSummary=function(){var m=document.getElementById('mailSummaryModal');if(m){m.classList.remove('show');m.setAttribute('aria-hidden','true');}};
+  var startupKey='mofa_startup_panel_last_seen'; var nowMs=Date.now(); var lastSeen=Number(sessionStorage.getItem(startupKey)||0); if(!lastSeen || nowMs-lastSeen>=60*60*1000){showStartupPanel(); sessionStorage.setItem(startupKey,String(nowMs));} setInterval(function(){showStartupPanel(); sessionStorage.setItem(startupKey,String(Date.now()));},60*60*1000); checkAlerts(); setInterval(checkAlerts,30000);
+})();
+</script>
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+</body>
+</html>

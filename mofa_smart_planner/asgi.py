@@ -1,0 +1,4 @@
+import os
+from django.core.asgi import get_asgi_application
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mofa_smart_planner.settings')
+application = get_asgi_application()

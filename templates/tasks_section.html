@@ -1,0 +1,23 @@
+<section class="panel task-section" id="{{ section_id }}">
+  <div class="head"><h3>{{ title }}</h3></div>
+  {% for task in tasks %}
+  <div class="task-card {% if task.status == 'DONE' %}task-done{% endif %}">
+    <div class="task-main">
+      <div class="task-title"><strong>{{ task.title }}</strong><span class="time-pill">{{ task.due_time }}</span></div>
+      <p>{{ task.notes|default:'لا توجد ملاحظات إضافية.' }}</p>
+      <span class="pill">{{ task.get_task_type_display }}</span>
+      <span class="pill datepill">{{ task.due_date }}</span>
+      <span class="pill {{ task.priority|lower }}">{{ task.get_priority_display }}</span>
+      <span class="pill">{{ task.get_status_display }}</span>
+      {% if task.reference_number %}<span class="pill">رقم: {{ task.reference_number }}</span>{% endif %}
+    </div>
+    <div class="task-actions">
+      <a class="btn primary small" href="{% url 'planner:task_done' task.pk %}">أنجز</a>
+      <a class="btn small" href="{% url 'planner:task_edit' task.pk %}?next={{ request.get_full_path|urlencode }}">تعديل</a>
+      <a class="btn gold small" href="{% url 'planner:task_defer' task.pk %}">تأجيل</a>
+      <button class="btn small" type="button" onclick="showPlannerAlertFromButton(this)" data-kind="task" data-key="manual-task-{{ task.pk }}" data-title="{{ task.title|escape }}" data-date="{{ task.due_date|date:'Y-m-d' }}" data-time="{{ task.due_time|time:'H:i' }}" data-meta="{{ task.get_task_type_display|escape }}" data-notes="{{ task.notes|default:'لا توجد ملاحظات إضافية.'|escape }}" data-done-url="{% url 'planner:task_done' task.pk %}" data-defer-url="{% url 'planner:task_defer' task.pk %}" data-delete-url="{% url 'planner:task_delete' task.pk %}">تنبيه</button>
+      <a class="btn danger small" href="{% url 'planner:task_delete' task.pk %}">حذف</a>
+    </div>
+  </div>
+  {% empty %}<div class="content">{{ empty }}</div>{% endfor %}
+</section>

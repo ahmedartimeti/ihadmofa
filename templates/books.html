@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="books-page-layout">
+  <div class="books-fixed-zone">
+<div class="top page-title-row simple-books-title">
+  <div>
+    <h1>الكتب والمتابعات</h1>
+    <p>هذه الصفحة تعرض الأعمال المدخلة ضمن المهام حسب النوع: كتب، إعمام، مطالعات، متابعات، مداولات، اجتماعات، اتصالات وغيرها.</p>
+  </div>
+  <a class="btn primary" href="{% url 'planner:tasks' %}?section=today">إضافة من المهام</a>
+</div>
+
+<div class="stats dashboard-stats simple-books-stats">
+  <div class="stat blue"><span>إجمالي رسمي</span><strong>{{ stats.total|default:0 }}</strong></div>
+  <div class="stat blue"><span>قيد المتابعة</span><strong>{{ stats.open|default:0 }}</strong></div>
+  <div class="stat gold"><span>منجزة</span><strong>{{ stats.done|default:0 }}</strong></div>
+  <div class="stat red"><span>مؤجلة</span><strong>{{ stats.deferred|default:0 }}</strong></div>
+</div>
+
+<section class="panel books-panel simple-books-list official-task-filter">
+  <div class="head simple-list-head">
+    <h3>قائمة الأعمال من المهام</h3>
+    <form method="get" class="search inline-search simple-search">
+      <input type="hidden" name="period" value="{{ period }}">
+      <input type="hidden" name="type" value="{{ task_type }}">
+      <input name="q" value="{{ q }}" placeholder="بحث بالعنوان أو الرقم">
+      <button class="btn small">بحث</button>
+    </form>
+  </div>
+
+  <div class="simple-filter-row">
+    <a class="btn small {% if period == 'today' %}active-filter{% endif %}" href="?period=today&type={{ task_type }}&sort={{ sort }}">اليوم</a>
+    <a class="btn small {% if period == 'week' %}active-filter{% endif %}" href="?period=week&type={{ task_type }}&sort={{ sort }}">الأسبوع</a>
+    <a class="btn small {% if period == 'month' %}active-filter{% endif %}" href="?period=month&type={{ task_type }}&sort={{ sort }}">الشهر</a>
+    <a class="btn small {% if period == 'year' %}active-filter{% endif %}" href="?period=year&type={{ task_type }}&sort={{ sort }}">السنة</a>
+    <a class="btn small {% if period == 'all' %}active-filter{% endif %}" href="?period=all&type={{ task_type }}&sort={{ sort }}">الكل</a>
+  </div>
+
+  <div class="simple-filter-row type-filter-row">
+    <a class="btn small {% if not task_type %}active-filter{% endif %}" href="?period={{ period }}&sort={{ sort }}">كل الأنواع</a>
+    {% for value,label in official_types %}
+      <a class="btn small {% if task_type == value %}active-filter{% endif %}" href="?period={{ period }}&type={{ value }}&sort={{ sort }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="simple-filter-row sort-filter-row">
+    <a class="btn small" href="?period={{ period }}&type={{ task_type }}&sort=due_date">حسب التاريخ</a>
+    <a class="btn small" href="?period={{ period }}&type={{ task_type }}&sort=priority">حسب الأولوية</a>
+    <a class="btn small" href="?period={{ period }}&type={{ task_type }}&sort=status">حسب الحالة</a>
+  </div>
+
+  </div>
+  <div class="simple-book-cards books-scroll-zone">
+    {% for item in items %}
+      <article class="simple-book-card official-task-card {% if item.status == 'DONE' %}task-done{% endif %}">
+        <div class="simple-book-main">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.get_task_type_display }}{% if item.reference_number %} / رقم {{ item.reference_number }}{% endif %}</span>
+          {% if item.notes %}<p>{{ item.notes }}</p>{% endif %}
+        </div>
+        <div class="simple-book-meta">
+          <span>التاريخ: {{ item.due_date }}</span>
+          <span>الوقت: {{ item.due_time }}</span>
+          <span class="pill {{ item.priority|lower }}">{{ item.get_priority_display }}</span>
+          <span class="pill status-{{ item.status|lower }}">{{ item.get_status_display }}</span>
+        </div>
+        <div class="simple-book-actions">
+          <a class="btn primary small" href="{% url 'planner:task_done' item.pk %}">أنجز</a>
+          <a class="btn small" href="{% url 'planner:task_edit' item.pk %}?next={{ request.get_full_path|urlencode }}">تعديل</a>
+          <a class="btn gold small" href="{% url 'planner:task_defer' item.pk %}">تأجيل</a>
+          <a class="btn danger small" href="{% url 'planner:task_delete' item.pk %}">حذف</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="empty-simple-books">لا توجد أعمال ضمن الاختيار الحالي. أضفها من صفحة المهام واختر النوع المناسب.</div>
+    {% endfor %}
+  </div>
+</section>
+</div>
+{% endblock %}
