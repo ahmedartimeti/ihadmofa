@@ -94,7 +94,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE_BACKEND = 'whitenoise.storage.CompressedManifestStaticFilesStorage' if (not DEBUG and importlib.util.find_spec('whitenoise')) else 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_STORAGE_BACKEND = 'whitenoise.storage.CompressedStaticFilesStorage' if (not DEBUG and importlib.util.find_spec('whitenoise')) else 'django.contrib.staticfiles.storage.StaticFilesStorage'
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': STATICFILES_STORAGE_BACKEND},
