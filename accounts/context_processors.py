@@ -1,4 +1,4 @@
-from datetime import timedelta
+﻿from datetime import timedelta
 
 from django.urls import reverse
 from django.utils import timezone
@@ -8,12 +8,11 @@ def profile_context(request):
     if not request.user.is_authenticated:
         return {'current_profile': None, 'quick_summary': None, 'startup_tasks': [], 'alert_items': []}
 
-    from accounts.utils import restrict_queryset
     from planner.models import Task
 
     today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
-    tasks = restrict_queryset(Task.objects.all(), request.user)
+    tasks = Task.objects.filter(user=request.user)
     startup_tasks = tasks.filter(due_date=today).exclude(status=Task.Status.DONE).order_by('due_time', 'title')[:8]
 
     alert_items = []
@@ -25,7 +24,7 @@ def profile_context(request):
             'date': task.due_date,
             'time': task.due_time,
             'meta': task.get_task_type_display(),
-            'notes': task.notes or 'لا توجد ملاحظات إضافية.',
+            'notes': task.notes or 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ©.',
             'done_url': reverse('planner:task_done', args=[task.pk]),
             'defer_url': reverse('planner:task_defer', args=[task.pk]),
             'delete_url': reverse('planner:task_delete', args=[task.pk]),
@@ -47,3 +46,4 @@ def profile_context(request):
             'future_count': tasks.filter(due_date__gt=tomorrow).count(),
         }
     }
+

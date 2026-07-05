@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+﻿from datetime import time, timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
-from accounts.utils import is_viewer, restrict_queryset
+from accounts.utils import is_viewer
 from .forms import TaskForm
 from .models import Task
 
@@ -32,13 +32,13 @@ def _redirect_back(request, fallback='planner:tasks'):
 
 def _can_write(request):
     if is_viewer(request.user):
-        messages.error(request, 'صلاحية المشاهدة فقط لا تسمح بالتعديل.')
+        messages.error(request, 'ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ù…Ø´Ø§Ù‡Ø¯Ø© ÙÙ‚Ø· Ù„Ø§ ØªØ³Ù…Ø­ Ø¨Ø§Ù„ØªØ¹Ø¯ÙŠÙ„.')
         return False
     return True
 
 
 def _base_tasks(user):
-    return restrict_queryset(Task.objects.all(), user)
+    return Task.objects.filter(user=user)
 
 
 def _is_overdue_today(now, task):
@@ -71,12 +71,12 @@ def _task_message_for_date(task):
     today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
     if task.due_date < today:
-        return 'تم حفظ المهمة ضمن مهام سابقة لأنها بتاريخ قديم.'
+        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ø³Ø§Ø¨Ù‚Ø© Ù„Ø£Ù†Ù‡Ø§ Ø¨ØªØ§Ø±ÙŠØ® Ù‚Ø¯ÙŠÙ….'
     if task.due_date == today:
-        return 'تم حفظ المهمة ضمن مهام اليوم.'
+        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ø§Ù„ÙŠÙˆÙ….'
     if task.due_date == tomorrow:
-        return 'تم حفظ المهمة ضمن مهام يوم غد.'
-    return 'تم حفظ المهمة ضمن مهام مستقبلية، وستنتقل تلقائياً عند حلول تاريخها.'
+        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… ÙŠÙˆÙ… ØºØ¯.'
+    return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ù…Ø³ØªÙ‚Ø¨Ù„ÙŠØ©ØŒ ÙˆØ³ØªÙ†ØªÙ‚Ù„ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù†Ø¯ Ø­Ù„ÙˆÙ„ ØªØ§Ø±ÙŠØ®Ù‡Ø§.'
 
 
 @login_required
@@ -161,7 +161,7 @@ def task_delete(request, pk):
     task = get_object_or_404(_base_tasks(request.user), pk=pk)
     if _can_write(request):
         task.delete()
-        messages.success(request, 'تم حذف المهمة.')
+        messages.success(request, 'ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…Ù‡Ù…Ø©.')
     return _redirect_back(request)
 
 
@@ -171,7 +171,7 @@ def task_done(request, pk):
     if _can_write(request):
         task.status = Task.Status.DONE
         task.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'تم تثبيت المهمة كمنجزة.')
+        messages.success(request, 'ØªÙ… ØªØ«Ø¨ÙŠØª Ø§Ù„Ù…Ù‡Ù…Ø© ÙƒÙ…Ù†Ø¬Ø²Ø©.')
     return _redirect_back(request)
 
 
@@ -181,14 +181,24 @@ def task_defer(request, pk):
     if _can_write(request):
         task.status = Task.Status.DEFERRED
         task.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'تم وضع المهمة بحالة مؤجلة دون تغيير تاريخها.')
+        messages.success(request, 'ØªÙ… ÙˆØ¶Ø¹ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¨Ø­Ø§Ù„Ø© Ù…Ø¤Ø¬Ù„Ø© Ø¯ÙˆÙ† ØªØºÙŠÙŠØ± ØªØ§Ø±ÙŠØ®Ù‡Ø§.')
     return _redirect_back(request)
 
 
 @login_required
 def task_remind(request, pk):
     task = get_object_or_404(_base_tasks(request.user), pk=pk)
-    messages.info(request, f'تنبيه: {task.title} - {task.due_date} {task.due_time}')
+    from notifications.models import PushSubscription
+    from notifications.views import _send_web_push
+    sent_count = 0
+    for subscription in PushSubscription.objects.filter(user=request.user, is_active=True):
+        ok, _ = _send_web_push(subscription, 'تنبيه مهمة', f'{task.title} - {task.due_date} {task.due_time}')
+        if ok:
+            sent_count += 1
+    if sent_count:
+        messages.success(request, f'تم إرسال التنبيه إلى {sent_count} جهاز.')
+    else:
+        messages.info(request, f'تنبيه: {task.title} - {task.due_date} {task.due_time}. فعّل تنبيهات الجهاز أولاً.')
     return _redirect_back(request)
 
 
@@ -199,7 +209,7 @@ def send_today_plan_email(request):
     profile = getattr(request.user, 'profile', None)
     email = (getattr(profile, 'email_for_alerts', '') or request.user.email or '').strip()
     if not email:
-        messages.error(request, 'لا يوجد إيميل مسجل في البروفايل لإرسال خطط اليوم.')
+        messages.error(request, 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¥ÙŠÙ…ÙŠÙ„ Ù…Ø³Ø¬Ù„ ÙÙŠ Ø§Ù„Ø¨Ø±ÙˆÙØ§ÙŠÙ„ Ù„Ø¥Ø±Ø³Ø§Ù„ Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ….')
         return _redirect_back(request)
 
     today = timezone.localdate()
@@ -211,23 +221,24 @@ def send_today_plan_email(request):
             for task in tasks
         ]
     else:
-        lines = ['لا توجد مهام مخططة لهذا اليوم.']
+        lines = ['Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‡Ø§Ù… Ù…Ø®Ø·Ø·Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„ÙŠÙˆÙ….']
 
-    subject = f'خطط اليوم - {today}'
+    subject = f'Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… - {today}'
     body_lines = [
-        f'السيد/ة {employee}',
+        f'Ø§Ù„Ø³ÙŠØ¯/Ø© {employee}',
         '',
-        f'خطط اليوم بتاريخ {today}:',
+        f'Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… Ø¨ØªØ§Ø±ÙŠØ® {today}:',
         '',
         *lines,
         '',
-        'نظام المذكر اليومي للموظف',
+        'Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø°ÙƒØ± Ø§Ù„ÙŠÙˆÙ…ÙŠ Ù„Ù„Ù…ÙˆØ¸Ù',
     ]
     body = "\n".join(body_lines)
     try:
         send_mail(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@mofa.local'), [email], fail_silently=False)
-        messages.success(request, f'تم إرسال خطط اليوم إلى: {email}')
+        messages.success(request, f'ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… Ø¥Ù„Ù‰: {email}')
     except Exception:
-        messages.error(request, 'لم يتم إرسال البريد. تأكد من إعدادات البريد الإلكتروني SMTP في إعدادات النظام.')
+        messages.error(request, 'Ù„Ù… ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯. ØªØ£ÙƒØ¯ Ù…Ù† Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ SMTP ÙÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù†Ø¸Ø§Ù….')
     return _redirect_back(request)
+
 
