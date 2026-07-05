@@ -32,7 +32,7 @@ def _redirect_back(request, fallback='planner:tasks'):
 
 def _can_write(request):
     if is_viewer(request.user):
-        messages.error(request, 'ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ù…Ø´Ø§Ù‡Ø¯Ø© ÙÙ‚Ø· Ù„Ø§ ØªØ³Ù…Ø­ Ø¨Ø§Ù„ØªØ¹Ø¯ÙŠÙ„.')
+        messages.error(request, 'صلاحية المشاهدة فقط لا تسمح بالتعديل.')
         return False
     return True
 
@@ -71,12 +71,12 @@ def _task_message_for_date(task):
     today = timezone.localdate()
     tomorrow = today + timedelta(days=1)
     if task.due_date < today:
-        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ø³Ø§Ø¨Ù‚Ø© Ù„Ø£Ù†Ù‡Ø§ Ø¨ØªØ§Ø±ÙŠØ® Ù‚Ø¯ÙŠÙ….'
+        return 'تم حفظ المهمة ضمن مهام سابقة لأنها بتاريخ قديم.'
     if task.due_date == today:
-        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ø§Ù„ÙŠÙˆÙ….'
+        return 'تم حفظ المهمة ضمن مهام اليوم.'
     if task.due_date == tomorrow:
-        return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… ÙŠÙˆÙ… ØºØ¯.'
-    return 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¶Ù…Ù† Ù…Ù‡Ø§Ù… Ù…Ø³ØªÙ‚Ø¨Ù„ÙŠØ©ØŒ ÙˆØ³ØªÙ†ØªÙ‚Ù„ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù†Ø¯ Ø­Ù„ÙˆÙ„ ØªØ§Ø±ÙŠØ®Ù‡Ø§.'
+        return 'تم حفظ المهمة ضمن مهام يوم غد.'
+    return 'تم حفظ المهمة ضمن مهام مستقبلية، وستنتقل تلقائياً عند حلول تاريخها.'
 
 
 @login_required
@@ -161,7 +161,7 @@ def task_delete(request, pk):
     task = get_object_or_404(_base_tasks(request.user), pk=pk)
     if _can_write(request):
         task.delete()
-        messages.success(request, 'ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…Ù‡Ù…Ø©.')
+        messages.success(request, 'تم حذف المهمة.')
     return _redirect_back(request)
 
 
@@ -171,7 +171,7 @@ def task_done(request, pk):
     if _can_write(request):
         task.status = Task.Status.DONE
         task.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'ØªÙ… ØªØ«Ø¨ÙŠØª Ø§Ù„Ù…Ù‡Ù…Ø© ÙƒÙ…Ù†Ø¬Ø²Ø©.')
+        messages.success(request, 'تم تثبيت المهمة كمنجزة.')
     return _redirect_back(request)
 
 
@@ -181,7 +181,7 @@ def task_defer(request, pk):
     if _can_write(request):
         task.status = Task.Status.DEFERRED
         task.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'ØªÙ… ÙˆØ¶Ø¹ Ø§Ù„Ù…Ù‡Ù…Ø© Ø¨Ø­Ø§Ù„Ø© Ù…Ø¤Ø¬Ù„Ø© Ø¯ÙˆÙ† ØªØºÙŠÙŠØ± ØªØ§Ø±ÙŠØ®Ù‡Ø§.')
+        messages.success(request, 'تم وضع المهمة بحالة مؤجلة دون تغيير تاريخها.')
     return _redirect_back(request)
 
 
@@ -209,7 +209,7 @@ def send_today_plan_email(request):
     profile = getattr(request.user, 'profile', None)
     email = (getattr(profile, 'email_for_alerts', '') or request.user.email or '').strip()
     if not email:
-        messages.error(request, 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¥ÙŠÙ…ÙŠÙ„ Ù…Ø³Ø¬Ù„ ÙÙŠ Ø§Ù„Ø¨Ø±ÙˆÙØ§ÙŠÙ„ Ù„Ø¥Ø±Ø³Ø§Ù„ Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ….')
+        messages.error(request, 'لا يوجد إيميل مسجل في البروفايل لإرسال خطط اليوم.')
         return _redirect_back(request)
 
     today = timezone.localdate()
@@ -221,24 +221,24 @@ def send_today_plan_email(request):
             for task in tasks
         ]
     else:
-        lines = ['Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‡Ø§Ù… Ù…Ø®Ø·Ø·Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„ÙŠÙˆÙ….']
+        lines = ['لا توجد مهام مخططة لهذا اليوم.']
 
-    subject = f'Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… - {today}'
+    subject = f'خطط اليوم - {today}'
     body_lines = [
-        f'Ø§Ù„Ø³ÙŠØ¯/Ø© {employee}',
+        f'السيد/ة {employee}',
         '',
-        f'Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… Ø¨ØªØ§Ø±ÙŠØ® {today}:',
+        f'خطط اليوم بتاريخ {today}:',
         '',
         *lines,
         '',
-        'Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø°ÙƒØ± Ø§Ù„ÙŠÙˆÙ…ÙŠ Ù„Ù„Ù…ÙˆØ¸Ù',
+        'نظام المذكر اليومي للموظف',
     ]
     body = "\n".join(body_lines)
     try:
         send_mail(subject, body, getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@mofa.local'), [email], fail_silently=False)
-        messages.success(request, f'ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø®Ø·Ø· Ø§Ù„ÙŠÙˆÙ… Ø¥Ù„Ù‰: {email}')
+        messages.success(request, f'تم إرسال خطط اليوم إلى: {email}')
     except Exception:
-        messages.error(request, 'Ù„Ù… ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯. ØªØ£ÙƒØ¯ Ù…Ù† Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ SMTP ÙÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù†Ø¸Ø§Ù….')
+        messages.error(request, 'لم يتم إرسال البريد. تأكد من إعدادات البريد الإلكتروني SMTP في إعدادات النظام.')
     return _redirect_back(request)
 
 
