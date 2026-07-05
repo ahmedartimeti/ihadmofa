@@ -24,7 +24,7 @@ def profile_context(request):
             'date': task.due_date,
             'time': task.due_time,
             'meta': task.get_task_type_display(),
-            'notes': task.notes or 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ©.',
+            'notes': task.notes or 'لا توجد ملاحظات إضافية.',
             'done_url': reverse('planner:task_done', args=[task.pk]),
             'defer_url': reverse('planner:task_defer', args=[task.pk]),
             'delete_url': reverse('planner:task_delete', args=[task.pk]),
